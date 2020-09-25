@@ -1,0 +1,57 @@
+.link-ocorrencia{
+    text-decoration:none;
+}
+
+ul li{
+    text-align: left;
+}
+
+body{
+    padding: 20px;
+    background-color: #F0FFF0; 
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+}
+.container{
+    margin-top: 20px;
+}
+table tbody tr td{
+    text-align: center;
+}
+table thead tr th{
+    text-align: center;
+}
+#navLogin {
+    color:red;
+}
+.float-button{
+    position: fixed;
+    bottom: 40px;
+    right: 40px;
+}
+.material-icons.blue { 
+    color:#0000CD;
+}
+
+.material-icons.red { 
+    color:red;
+}
+
+.material-icons.green { 
+    color:green;
+}
+
+.material-icons.white { 
+    color: white;
+}
+
+.material-icons.md-18 { font-size: 18px; }
+.material-icons.md-24 { font-size: 24px; }
+.material-icons.md-36 { font-size: 36px; }
+.material-icons.md-48 { font-size: 24px; }
+.material-icons.md-60 { font-size: 60px; }
+
+.centralizado {
+    margin: 5px;
+}
