@@ -6,7 +6,9 @@ use App\Models\Categoria;
 use App\Models\Cliente;
 use App\Models\ClienteTelefone;
 use App\Models\Marca;
+use App\Models\Pet;
 use App\Models\Produto;
+use App\Models\Raca;
 use App\Models\Servico;
 use App\Models\Telefone;
 use App\Models\TipoAnimal;
@@ -227,6 +229,7 @@ class UserController extends Controller
     {
         $prod = Produto::find($id);
         if(isset($prod)){
+            Storage::disk('public')->delete($prod->foto);
             $prod->ativo = false;
             $prod->save();
         }
@@ -584,4 +587,213 @@ class UserController extends Controller
         }
         return back();
     }
+
+
+    //RAÇA
+    public function indexRacas()
+    {
+        $racas = Raca::orderBy('nome')->paginate(20);
+        return view('cadastros.racas',compact('racas'));
+    }
+
+    public function cadastrarRaca(Request $request)
+    {
+        $raca = new Raca();
+        if($request->file('foto')!=""){
+            $path = $request->file('foto')->store('fotos_racas','public');
+            $raca->foto = $path;
+        }
+        $raca->nome = $request->input('nome');
+        $raca->descricao = $request->input('descricao');
+        $raca->save();
+        return back();
+    }
+
+    public function editarRaca(Request $request, $id)
+    {
+        $raca = Raca::find($id);
+        if(isset($raca)){
+            if($request->file('foto')!=""){
+                Storage::disk('public')->delete($raca->foto);
+                $path = $request->file('foto')->store('fotos_racas','public');
+                $raca->foto = $path;
+            }
+            $raca->nome = $request->input('nome');
+            $raca->descricao = $request->input('descricao');
+            $raca->save();
+        }
+        return back();
+    }
+
+
+    //PET
+    public function indexPets()
+    {
+        $pets = Pet::paginate(20);
+        $racas = Raca::orderBy('nome')->get();
+        $clientes = Cliente::orderBy('nome')->get();
+        return view('cadastros.pets',compact('pets','racas','clientes'));
+    }
+
+    public function cadastrarPet(Request $request)
+    {
+        $pet = new Pet();
+        if($request->file('foto')!=""){
+            $path = $request->file('foto')->store('fotos_pets','public');
+            $pet->foto = $path;
+        }
+        if($request->input('nome')!=""){
+            $pet->nome = $request->input('nome');
+        }
+        if($request->input('raca')!=""){
+            $pet->raca_id = $request->input('raca');
+        }
+        if($request->input('porte')!=""){
+            $pet->porte = $request->input('porte');
+        }
+        if($request->input('pelo')!=""){
+            $pet->pelo = $request->input('pelo');
+        }
+        if($request->input('cor')!=""){
+            $pet->cor = $request->input('cor');
+        }
+        if($request->input('sexo')!=""){
+            $pet->sexo = $request->input('sexo');
+        }
+        if($request->input('ativo')!=""){
+            $pet->ativo = $request->input('ativo');
+        }
+        if($request->input('cliente')!=""){
+            $pet->cliente_id = $request->input('cliente');
+        }
+        $pet->save();
+        return back();
+    }
+
+    public function editarPet(Request $request, $id)
+    {
+        $pet = Pet::find($id);
+        if(isset($pet)){
+            if($request->file('foto')!=""){
+                Storage::disk('public')->delete($pet->foto);
+                $path = $request->file('foto')->store('fotos_pets','public');
+                $pet->foto = $path;
+            }
+            if($request->input('nome')!=""){
+                $pet->nome = $request->input('nome');
+            }
+            if($request->input('raca')!=""){
+                $pet->raca_id = $request->input('raca');
+            }
+            if($request->input('porte')!=""){
+                $pet->porte = $request->input('porte');
+            }
+            if($request->input('pelo')!=""){
+                $pet->pelo = $request->input('pelo');
+            }
+            if($request->input('cor')!=""){
+                $pet->cor = $request->input('cor');
+            }
+            if($request->input('sexo')!=""){
+                $pet->sexo = $request->input('sexo');
+            }
+            if($request->input('ativo')!=""){
+                $pet->ativo = $request->input('ativo');
+            }
+            if($request->input('cliente')!=""){
+                $pet->cliente_id = $request->input('cliente');
+            }
+            $pet->save();
+        }
+        return back();
+    }
+
+    public function apagarPet($id)
+    {
+        $pet = Pet::find($id);
+        if(isset($prod)){
+            Storage::disk('public')->delete($pet->foto);
+            $pet->ativo = false;
+            $pet->save();
+        }
+        return back();
+    }
+
+    public function filtroPet(Request $request)
+    {
+        $nome = $request->input('nome');
+        $cat = $request->input('categoria');
+        $tipo = $request->input('tipo');
+        $fase = $request->input('fase');
+        $marca = $request->input('marca');
+        if(isset($nome)){
+            if(isset($cat)){
+                if(isset($tipo)){
+                    if(isset($fase)){
+                        if(isset($marca)){
+                            $prods = Produto::where('nome','like',"%$nome%")->where('categoria_id',"$cat")->where('tipo_animal_id',"$tipo")->where('tipo_fase',"$fase")->where('marca_id',"$marca")->orderBy('nome')->paginate(10);
+                        } else {
+                            $prods = Produto::where('nome','like',"%$nome%")->where('categoria_id',"$cat")->where('tipo_animal_id',"$tipo")->where('tipo_fase',"$fase")->orderBy('nome')->paginate(10); 
+                        }
+                    } else {
+                        $prods = Produto::where('nome','like',"%$nome%")->where('categoria_id',"$cat")->where('tipo_animal_id',"$tipo")->orderBy('nome')->paginate(10);
+                    }
+                } else {
+                    $prods = Produto::where('nome','like',"%$nome%")->where('categoria_id',"$cat")->orderBy('nome')->paginate(10);
+                }
+            } else {
+                $prods = Produto::where('nome','like',"%$nome%")->orderBy('nome')->paginate(10);
+            }
+        } else {
+            if(isset($cat)){
+                if(isset($tipo)){
+                    if(isset($fase)){
+                        if(isset($marca)){
+                            $prods = Produto::where('categoria_id',"$cat")->where('tipo_animal_id',"$tipo")->where('tipo_fase',"$fase")->where('marca_id',"$marca")->orderBy('nome')->paginate(10);
+                        } else {
+                            $prods = Produto::where('categoria_id',"$cat")->where('tipo_animal_id',"$tipo")->where('tipo_fase',"$fase")->orderBy('nome')->paginate(10); 
+                        }
+                    } else {
+                        $prods = Produto::where('categoria_id',"$cat")->where('tipo_animal_id',"$tipo")->orderBy('nome')->paginate(10);
+                    }
+                } else {
+                    $prods = Produto::where('categoria_id',"$cat")->orderBy('nome')->paginate(10);
+                }
+            } else {
+                if(isset($tipo)){
+                    if(isset($fase)){
+                        if(isset($marca)){
+                            $prods = Produto::where('tipo_animal_id',"$tipo")->where('tipo_fase',"$fase")->where('marca_id',"$marca")->orderBy('nome')->paginate(10);
+                        } else {
+                            $prods = Produto::where('tipo_animal_id',"$tipo")->where('tipo_fase',"$fase")->orderBy('nome')->paginate(10); 
+                        }
+                    } else {
+                        $prods = Produto::where('tipo_animal_id',"$tipo")->orderBy('nome')->paginate(10);
+                    }
+                } else {
+                    if(isset($fase)){
+                        if(isset($marca)){
+                            $prods = Produto::where('tipo_fase',"$fase")->where('marca_id',"$marca")->orderBy('nome')->paginate(10);
+                        } else {
+                            $prods = Produto::where('tipo_fase',"$fase")->orderBy('nome')->paginate(10); 
+                        }
+                    } else {
+                        if(isset($marca)){
+                            $prods = Produto::where('marca_id',"$marca")->orderBy('nome')->paginate(10);
+                        } else {
+                            return redirect('/admin/produtos');
+                        }
+                    }
+                }
+            }
+        }
+        
+        $tipos = TipoAnimal::where('ativo',true)->orderBy('nome')->get();
+        $marcas = Marca::where('ativo',true)->orderBy('nome')->get();
+        $cats = Categoria::where('ativo',true)->orderBy('nome')->get();
+        return view('cadastros.produtos',compact('prods','tipos','marcas','cats'));
+    }
+
+
+
 }

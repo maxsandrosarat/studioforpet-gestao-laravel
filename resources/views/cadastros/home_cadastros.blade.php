@@ -19,6 +19,17 @@
                 <div class="d-flex justify-content-center centralizado">
                     <div class="card border-primary text-center" style="width: 255px;">
                         <div class="card-body">
+                            <h5>Pets</h5>
+                            <p class="card-text">
+                                Gerencie seus pets! 
+                            </p>
+                            <a href="/pets" class="btn btn-primary">Gerenciar</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-center centralizado">
+                    <div class="card border-primary text-center" style="width: 255px;">
+                        <div class="card-body">
                             <h5>Serviços</h5>
                             <p class="card-text">
                                 Gerencie seus Serviços de Estética! 
@@ -68,6 +79,17 @@
                                 Gerencie seus Tipos de Animais! 
                             </p>
                             <a href="/tiposAnimais" class="btn btn-primary">Gerenciar</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-center centralizado">
+                    <div class="card border-primary text-center" style="width: 255px;">
+                        <div class="card-body">
+                            <h5>Raças</h5>
+                            <p class="card-text">
+                                Gerencie suas raças!
+                            </p>
+                            <a href="/racas" class="btn btn-primary">Gerenciar</a>
                         </div>
                     </div>
                 </div>

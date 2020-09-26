@@ -73,3 +73,17 @@ Route::group(['prefix' => 'servicos'], function() {
     Route::post('/editar/{id}', 'UserController@editarServico');
     Route::get('/apagar/{id}', 'UserController@apagarServico');
 });
+
+Route::group(['prefix' => 'racas'], function() {
+    Route::get('/', 'UserController@indexRacas');
+    Route::post('/', 'UserController@cadastrarRaca');
+    Route::post('/editar/{id}', 'UserController@editarRaca');
+});
+
+Route::group(['prefix' => 'pets'], function() {
+    Route::get('/', 'UserController@indexPets');
+    Route::post('/', 'UserController@cadastrarPet');
+    Route::post('/editar/{id}', 'UserController@editarPet');
+    Route::get('/apagar/{id}', 'UserController@apagarPet');
+    Route::get('/filtro', 'UserController@filtroPet');
+});
