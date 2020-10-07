@@ -9,11 +9,20 @@
             <li @if($current=="home") class="nav-item active" @else class="nav-item" @endif>
                 <a class="nav-link" href="/home">Home</a>
             </li>
+            <li @if($current=="vendas") class="nav-item active" @else class="nav-item" @endif>
+                <a class="nav-link" href="/vendas">Vendas</a>
+            </li>
+            <li @if($current=="lancamentos") class="nav-item active" @else class="nav-item" @endif>
+                <a class="nav-link" href="/lancamentos">Lançamentos</a>
+            </li>
             <li @if($current=="cadastros") class="nav-item active" @else class="nav-item" @endif>
                 <a class="nav-link" href="/cadastros">Cadastros</a>
             </li>
             <li @if($current=="estoque") class="nav-item active" @else class="nav-item" @endif>
                 <a class="nav-link" href="/estoque">Estoque</a>
+            </li>
+            <li @if($current=="historicos") class="nav-item active" @else class="nav-item" @endif>
+                <a class="nav-link" href="/historicos">Históricos</a>
             </li>
             @endauth
 

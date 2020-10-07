@@ -12,7 +12,7 @@
             @else
             <div class="card border">
                 <h5>Filtros: </h5>
-                <form class="form-inline my-2 my-lg-0" method="GET" action="/estoque/filtro">
+                <form class="form-inline my-2 my-lg-0" method="GET" action="/estoque/lancamentos/filtro">
                     @csrf
                     <input class="form-control mr-sm-2" type="text" placeholder="Nome do Produto" name="nome">
                     <select class="custom-select" id="categoria" name="categoria">
@@ -50,6 +50,7 @@
                 <thead class="thead-dark">
                     <tr>
                         <th>Foto</th>
+                        <th>Categoria</th>
                         <th>Nome</th>
                         <th>Tipo Animal</th>
                         <th>Tipo Fase</th>
@@ -78,6 +79,7 @@
                             </div>
                         </div>
                         </div>
+                        <td>{{$prod->categoria->nome}}</td>
                         <td>{{$prod->nome}}</td>
                         <td>{{$prod->tipo_animal->nome}}</td>
                         <td>@if($prod->tipo_fase=='filhote') Filhote @else @if($prod->tipo_fase=='adulto') Adulto @else @if($prod->tipo_fase=='castrado') Castrado @else Todas @endif @endif @endif</td>
@@ -101,7 +103,7 @@
                                     <div class="modal-body">
                                         <div class="card border">
                                             <div class="card-body">
-                                                <form action="/estoque/entrada/{{$prod->id}}" method="POST">
+                                                <form action="/estoque/lancamentos/entrada/{{$prod->id}}" method="POST">
                                                     @csrf
                                                     <div class="form-group">
                                                         <h5>Produto Selecionado:</h5>
@@ -145,7 +147,7 @@
                                     <div class="modal-body">
                                         <div class="card border">
                                             <div class="card-body">
-                                                <form action="/estoque/saida/{{$prod->id}}" method="POST">
+                                                <form action="/estoque/lancamentos/saida/{{$prod->id}}" method="POST">
                                                     @csrf
                                                     <div class="form-group">
                                                         <h5>Produto Selecionado:</h5>

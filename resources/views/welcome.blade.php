@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
         <title>Studio For Pet</title>
-        <link rel="shortcut icon" href="/storage/favicon.ico"/>
+        <link rel="shortcut icon" href="/storage/favicon.png"/>
         
         <!-- Fonts -->
         <link href="https://fonts.googleapis.com/css?family=Nunito:200,600" rel="stylesheet">

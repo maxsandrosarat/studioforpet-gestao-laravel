@@ -16,18 +16,15 @@ class CreateProdutosTable extends Migration
         Schema::create('produtos', function (Blueprint $table) {
             $table->id();
             $table->string('foto')->nullable();
+            $table->foreignId('categoria_id')->constrained()->cascadeOnDelete();
             $table->string('nome');
-            $table->unsignedBigInteger('tipo_animal_id');
+            $table->foreignId('tipo_animal_id')->constrained()->cascadeOnDelete();
             $table->string('tipo_fase');
-            $table->unsignedBigInteger('marca_id');
+            $table->foreignId('marca_id')->constrained()->cascadeOnDelete();
             $table->string('embalagem');
             $table->float('preco');
             $table->integer('estoque');
-            $table->unsignedBigInteger('categoria_id');
             $table->boolean('ativo')->default(true);
-            $table->foreign('tipo_animal_id')->references('id')->on('tipo_animals');
-            $table->foreign('marca_id')->references('id')->on('marcas');
-            $table->foreign('categoria_id')->references('id')->on('categorias');
             $table->timestamps();
         });
     }

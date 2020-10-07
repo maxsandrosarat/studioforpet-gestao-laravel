@@ -28,6 +28,13 @@
                                         <br/>
                                         <b style="font-size: 80%;">Aceito apenas Imagens JPG e PNG (".jpg" e ".png")</b>
                                         <br/><br/>
+                                        <label for="categoria">Categoria</label>
+                                        <select class="custom-select" id="categoria" name="categoria" required>
+                                            <option value="">Selecione</option>
+                                            @foreach ($cats as $cat)
+                                                <option value="{{$cat->id}}">{{$cat->nome}}</option>
+                                            @endforeach
+                                        </select>
                                         <label for="nome">Nome do Produto</label>
                                         <input type="text" class="form-control" name="nome" id="nome" placeholder="Exemplo: Ração" required>
                                         <br/>
@@ -42,10 +49,9 @@
                                         <label for="fase">Fase do Animal:</label>
                                         <select class="custom-select" id="fase" name="fase" required>
                                             <option value="">Selecione a fase do animal</option>
-                                            <option value="filhote">Filhote</option>
-                                            <option value="adulto">Adulto</option>
-                                            <option value="castrado">Castrado</option>
-                                            <option value="todas">Todas</option>
+                                            <option value="Filhote">Filhote</option>
+                                            <option value="Adulto">Adulto</option>
+                                            <option value="Todas">Todas</option>
                                         </select>
                                         <br/><br/>
                                         <label for="marca">Marca</label>
@@ -65,13 +71,6 @@
                                         <label for="estoque">Estoque do Produto</label>
                                         <input type="number" class="form-control" name="estoque" id="estoque" placeholder="Exemplo: 100" required>
                                         <br/>
-                                        <label for="categoria">Categoria</label>
-                                        <select class="custom-select" id="categoria" name="categoria" required>
-                                            <option value="">Selecione</option>
-                                            @foreach ($cats as $cat)
-                                                <option value="{{$cat->id}}">{{$cat->nome}}</option>
-                                            @endforeach
-                                        </select>
                                         <h5>Ativo?</h5>
                                         <input type="radio" id="sim" name="ativo" value="1" required>
                                         <label for="sim">Sim</label>
@@ -89,9 +88,15 @@
                 </div>
             </div>
             @if(count($prods)==0)
-                <div class="alert alert-danger" role="alert">
-                    Sem produtos cadastrados!
-                </div>
+                    <div class="alert alert-dark" role="alert">
+                        @if($view=="inicial")
+                        Sem produtos cadastrados! Faça novo cadastro no botão    <a type="button" href="#"><i class="material-icons blue">add_circle</i></a>   no canto inferior direito.
+                        @endif
+                        @if($view=="filtro")
+                        Sem resultados da busca!
+                        <a href="/produtos" class="btn btn-success">Nova Busca</a>
+                        @endif
+                    </div>
             @else
             <div class="card border">
                 <h5>Filtros: </h5>
@@ -112,10 +117,9 @@
                     </select>
                     <select class="custom-select" id="fase" name="fase">
                         <option value="">Fase Animal</option>
-                        <option value="filhote">Filhote</option>
-                        <option value="adulto">Adulto</option>
-                        <option value="castrado">Castrado</option>
-                        <option value="todas">Todas</option>
+                        <option value="Filhote">Filhote</option>
+                        <option value="Adulto">Adulto</option>
+                        <option value="Todas">Todas</option>
                     </select>
                     <select class="custom-select" id="marca" name="marca">
                         <option value="">Marca</option>
@@ -146,7 +150,7 @@
                     @foreach ($prods as $prod)
                     <tr>
                         <td>{{$prod->id}}</td>
-                        <td width="100"><button type="button" data-toggle="modal" data-target="#exampleModalFoto{{$prod->id}}">@if($prod->foto!="")<img style="margin:0px; padding:0px;" src="/storage/{{$prod->foto}}" alt="foto_produto" width="50%"> @else <i class="material-icons md-60">no_photography</i> @endif</button></td>
+                        <td width="100"><button type="button" data-toggle="modal" data-target="#exampleModalFoto{{$prod->id}}">@if($prod->foto!="")<img style="margin:0px; padding:0px;" src="/storage/{{$prod->foto}}" alt="foto_produto" width="50%"> @else <i class="material-icons md-48">no_photography</i> @endif</button></td>
                         <!-- Modal -->
                         <div class="modal fade bd-example-modal-lg" id="exampleModalFoto{{$prod->id}}" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
                         <div class="modal-dialog modal-lg" role="document">
@@ -162,7 +166,7 @@
                             </div>
                         </div>
                         </div>
-                        <td>{{$prod->nome}} {{$prod->tipo_animal->nome}} @if($prod->tipo_fase=='filhote') Filhote @else @if($prod->tipo_fase=='adulto') Adulto @else @if($prod->tipo_fase=='castrado') Castrado @else Todas @endif @endif @endif {{$prod->marca->nome}} {{$prod->embalagem}}</td>
+                        <td>{{$prod->categoria->nome}} {{$prod->nome}} {{$prod->tipo_animal->nome}} @if($prod->tipo_fase=='filhote') Filhote @else @if($prod->tipo_fase=='adulto') Adulto @else @if($prod->tipo_fase=='castrado') Castrado @else Todas @endif @endif @endif {{$prod->marca->nome}} {{$prod->embalagem}}</td>
                         <td width="78-">{{ 'R$ '.number_format($prod->preco, 2, ',', '.')}}</td>
                         <td>{{$prod->estoque}}</td>
                         <td>{{$prod->categoria->nome}}</td>
@@ -191,6 +195,16 @@
                                                         <input type="file" id="foto" name="foto" accept=".jpg,.png,jpeg">
                                                         <br/>
                                                         <b style="font-size: 80%;">Aceito apenas Imagens JPG e PNG (".jpg" e ".png")</b>
+                                                        <label for="categoria">Categoria</label>
+                                                        <select  class="custom-select" id="categoria" name="categoria" required>
+                                                            <option value="{{$prod->categoria->id}}">{{$prod->categoria->nome}}</option>
+                                                            @foreach ($cats as $cat)
+                                                                @if($cat->id==$prod->categoria->id)
+                                                                @else
+                                                                <option value="{{$cat->id}}">{{$cat->nome}}</option>
+                                                                @endif
+                                                            @endforeach
+                                                        </select>
                                                         <label for="nome">Nome do Produto</label>
                                                         <input type="text" class="form-control" name="nome" id="nome" value="{{$prod->nome}}" required>
                                                         <br/>
@@ -207,27 +221,18 @@
                                                         <br/><br/>
                                                         <label for="fase">Fase do Animal:</label>
                                                         <select class="custom-select" id="fase" name="fase">
-                                                            <option value="{{$prod->tipo_fase}}">@if($prod->tipo_fase=="filhote") Filhote @else @if($prod->tipo_fase=="adulto") Adulto @else @if($prod->tipo_fase=="castrado") Castrado @else @if($prod->tipo_fase=="todas") Todas @endif @endif @endif @endif</option>
-                                                            @if($prod->tipo_fase=="filhote")
-                                                            <option value="adulto">Adulto</option>
-                                                            <option value="castrado">Castrado</option>
-                                                            <option value="todas">Todas</option>
+                                                            <option value="{{$prod->tipo_fase}}">{{$prod->tipo_fase}}</option>
+                                                            @if($prod->tipo_fase=="Filhote")
+                                                            <option value="Adulto">Adulto</option>
+                                                            <option value="Todas">Todas</option>
                                                             @else
-                                                                @if($prod->tipo_fase=="adulto")
-                                                                <option value="filhote">Filhote</option>
-                                                                <option value="castrado">Castrado</option>
-                                                                <option value="todas">Todas</option>
+                                                                @if($prod->tipo_fase=="Adulto")
+                                                                <option value="Filhote">Filhote</option>
+                                                                <option value="Todas">Todas</option>
                                                                 @else
-                                                                    @if($prod->tipo_fase=="castrado")
-                                                                    <option value="filhote">Filhote</option>
-                                                                    <option value="adulto">Adulto</option>
-                                                                    <option value="todas">Todas</option>
-                                                                    @else
-                                                                        @if($prod->tipo_fase=="todas")
-                                                                        <option value="filhote">Filhote</option>
-                                                                        <option value="adulto">Adulto</option>
-                                                                        <option value="castrado">Castrado</option>
-                                                                        @endif
+                                                                    @if($prod->tipo_fase=="Todas")
+                                                                    <option value="Filhote">Filhote</option>
+                                                                    <option value="Adulto">Adulto</option>
                                                                     @endif
                                                                 @endif
                                                             @endif
@@ -253,16 +258,6 @@
                                                         <!--<label for="estoque">Estoque do Produto</label>
                                                         <input type="number" class="form-control" name="estoque" id="estoque" value="{{$prod->estoque}}" required>
                                                         <br><br/>-->
-                                                        <label for="categoria">Categoria</label>
-                                                        <select  class="custom-select" id="categoria" name="categoria" required>
-                                                            <option value="{{$prod->categoria->id}}">{{$prod->categoria->nome}}</option>
-                                                            @foreach ($cats as $cat)
-                                                                @if($cat->id==$prod->categoria->id)
-                                                                @else
-                                                                <option value="{{$cat->id}}">{{$cat->nome}}</option>
-                                                                @endif
-                                                            @endforeach
-                                                        </select>
                                                         <h5>Ativo?</h5>
                                                         <input type="radio" id="sim" name="ativo" value="1" @if($prod->ativo=="1") checked @endif required>
                                                         <label for="sim">Sim</label>

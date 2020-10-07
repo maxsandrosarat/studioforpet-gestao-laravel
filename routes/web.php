@@ -54,10 +54,19 @@ Route::group(['prefix' => 'produtos'], function() {
 });
 
 Route::group(['prefix' => 'estoque'], function() {
-    Route::get('/', 'UserController@indexEstoque');
-    Route::get('/filtro', 'UserController@filtroEstoque');
-    Route::post('/entrada/{id}', 'UserController@entradaEstoque');
-    Route::post('/saida/{id}', 'UserController@saidaEstoque');
+    Route::get('/', 'UserController@estoque');
+
+    Route::group(['prefix' => 'lancamentos'], function() {
+        Route::get('/', 'UserController@indexEstoque');
+        Route::get('/filtro', 'UserController@filtroEstoque');
+        Route::post('/entrada/{id}', 'UserController@entradaEstoque');
+        Route::post('/saida/{id}', 'UserController@saidaEstoque');
+    });
+
+    Route::group(['prefix' => 'historicos'], function() {
+        Route::get('/', 'UserController@indexEntradaSaidas');
+        Route::get('/filtro', 'UserController@filtroEntradaSaidas');
+    });
 });
 
 Route::group(['prefix' => 'clientes'], function() {
@@ -87,3 +96,35 @@ Route::group(['prefix' => 'pets'], function() {
     Route::get('/apagar/{id}', 'UserController@apagarPet');
     Route::get('/filtro', 'UserController@filtroPet');
 });
+
+Route::group(['prefix' => 'vendas'], function() {
+    Route::get('/', 'UserController@vendas');
+
+    Route::group(['prefix' => 'servicos'], function() {
+        Route::get('/', 'UserController@indexVendaServicos');
+        Route::post('/', 'UserController@cadastrarVendaServico');
+        Route::get('/apagar/{id}', 'UserController@apagarVendaServico');
+        Route::get('/filtro', 'UserController@filtroVendaServico');
+    });
+    
+    Route::group(['prefix' => 'produtos'], function() {
+        Route::get('/', 'UserController@indexVendaProdutos');
+        Route::post('/', 'UserController@cadastrarVendaProduto');
+        Route::get('/apagar/{id}', 'UserController@apagarVendaProduto');
+        Route::get('/filtro', 'UserController@filtroVendaProduto');
+    });
+});
+
+Route::group(['prefix' => 'lancamentos'], function() {
+    Route::get('/', 'UserController@indexLancamentos');
+    Route::post('/deposito', 'UserController@depositoLancamento');
+    Route::post('/retirada', 'UserController@retiradaLancamento');
+    Route::get('/filtro', 'UserController@filtroLancamento');
+});
+
+Route::group(['prefix' => 'historicos'], function() {
+    Route::get('/', 'UserController@historicos');
+    Route::get('/filtro', 'UserController@filtroHistoricos');
+});
+
+

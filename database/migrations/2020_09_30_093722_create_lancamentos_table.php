@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateEntradaSaidasTable extends Migration
+class CreateLancamentosTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,11 +13,10 @@ class CreateEntradaSaidasTable extends Migration
      */
     public function up()
     {
-        Schema::create('entrada_saidas', function (Blueprint $table) {
+        Schema::create('lancamentos', function (Blueprint $table) {
             $table->id();
-            $table->enum('tipo',['entrada','saida']);
-            $table->foreignId('produto_id')->constrained()->cascadeOnDelete();
-            $table->integer('quantidade');
+            $table->enum('tipo',['retirada','deposito']);
+            $table->float('valor');
             $table->string('usuario');
             $table->string('motivo')->nullable();
             $table->timestamps();
@@ -31,6 +30,6 @@ class CreateEntradaSaidasTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('entrada_saidas');
+        Schema::dropIfExists('lancamentos');
     }
 }

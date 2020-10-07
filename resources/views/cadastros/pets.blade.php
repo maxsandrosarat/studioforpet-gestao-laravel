@@ -4,7 +4,7 @@
     <div class="card border">
         <div class="card-body">
             <h5 class="card-title">Lista de Pets</h5>
-            <a type="button" class="float-button" data-toggle="modal" data-target="#exampleModal" data-toggle="tooltip" data-placement="bottom" title="Adicionar Novo petuto">
+            <a type="button" class="float-button" data-toggle="modal" data-target="#exampleModal" data-toggle="tooltip" data-placement="bottom" title="Adicionar Novo Pet">
                 <i class="material-icons blue md-60">add_circle</i>
             </a>
             <!-- Modal -->
@@ -89,9 +89,15 @@
                 </div>
             </div>
             @if(count($pets)==0)
-                <div class="alert alert-danger" role="alert">
-                    Sem pets cadastrados!
-                </div>
+                    <div class="alert alert-dark" role="alert">
+                        @if($view=="inicial")
+                        Sem pets cadastrados! Faça novo cadastro no botão    <a type="button" href="#"><i class="material-icons blue">add_circle</i></a>   no canto inferior direito.
+                        @endif
+                        @if($view=="filtro")
+                        Sem resultados da busca!
+                        <a href="/pets" class="btn btn-success">Nova Busca</a>
+                        @endif
+                    </div>
             @else
             <div class="card border">
                 <h5>Filtros: </h5>

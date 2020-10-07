@@ -5,14 +5,22 @@ namespace App\Http\Controllers;
 use App\Models\Categoria;
 use App\Models\Cliente;
 use App\Models\ClienteTelefone;
+use App\Models\EntradaSaida;
+use App\Models\Historico;
+use App\Models\Lancamento;
 use App\Models\Marca;
 use App\Models\Pet;
 use App\Models\Produto;
 use App\Models\Raca;
+use App\Models\Saldo;
 use App\Models\Servico;
 use App\Models\Telefone;
 use App\Models\TipoAnimal;
+use App\Models\User;
+use App\Models\VendaProduto;
+use App\Models\VendaServico;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
 {
@@ -23,6 +31,99 @@ class UserController extends Controller
 
     public function cadastros(){
         return view('cadastros.home_cadastros');
+    }
+
+    public function vendas(){
+        return view('vendas.home_vendas');
+    }
+
+    public function estoque(){
+        return view('estoque.home_estoque');
+    }
+
+
+    //HISTÓRICOS
+    public function historicos(){
+        $view = "inicial";
+        $users = User::orderBy('name')->get();
+        $hists = Historico::orderBy('created_at', 'desc')->paginate(20);
+        return view('historico.historico',compact('view','users','hists'));
+    }
+
+    public function filtroHistoricos(Request $request)
+    {
+        $tipo = $request->input('tipo');
+        if($request->input('user')!=""){
+            $userId = $request->input('user');
+            $user = User::find($userId);
+            $usuario = $user->name;
+        }
+        $dataInicio = $request->input('dataInicio');
+        $dataFim = $request->input('dataFim');
+        if(isset($tipo)){
+            if(isset($user)){
+                if(isset($dataInicio)){
+                    if(isset($dataFim)){
+                        $hists = Historico::where('tipo','like',"%$tipo%")->where('usuario','like',"$usuario")->whereBetween('created_at',["$dataInicio"." 00:00", "$dataFim"." 23:59"])->paginate(100);
+                    } else {
+                        $hists = Historico::where('tipo','like',"%$tipo%")->where('usuario','like',"$usuario")->whereBetween('created_at',["$dataInicio"." 00:00", date("Y/m/d")." 23:59"])->paginate(100);
+                    }
+                } else {
+                    if(isset($dataFim)){
+                        $hists = Historico::where('tipo','like',"%$tipo%")->where('usuario','like',"$usuario")->whereBetween('created_at',["", "$dataFim"." 23:59"])->paginate(100);
+                    } else {
+                        $hists = Historico::where('tipo','like',"%$tipo%")->where('usuario','like',"$usuario")->paginate(100);
+                    }
+                }
+            } else {
+                if(isset($dataInicio)){
+                    if(isset($dataFim)){
+                        $hists = Historico::where('tipo','like',"%$tipo%")->whereBetween('created_at',["$dataInicio"." 00:00", "$dataFim"." 23:59"])->paginate(100);
+                    } else {
+                        $hists = Historico::where('tipo','like',"%$tipo%")->whereBetween('created_at',["$dataInicio"." 00:00", date("Y/m/d")])->paginate(100);
+                    }
+                } else {
+                    if(isset($dataFim)){
+                        $hists = Historico::where('tipo','like',"%$tipo%")->whereBetween('created_at',["", "$dataFim"." 23:59"])->paginate(100);
+                    } else {
+                        $hists = Historico::where('tipo','like',"%$tipo%")->paginate(100);
+                    }
+                }
+            }
+        } else {
+            if(isset($user)){
+                if(isset($dataInicio)){
+                    if(isset($dataFim)){
+                        $hists = Historico::where('usuario','like',"$usuario")->whereBetween('created_at',["$dataInicio"." 00:00", "$dataFim"." 23:59"])->paginate(100);
+                    } else {
+                        $hists = Historico::where('usuario','like',"$usuario")->whereBetween('created_at',["$dataInicio"." 00:00", date("Y/m/d")])->paginate(100);
+                    }
+                } else {
+                    if(isset($dataFim)){
+                        $hists = Historico::where('usuario','like',"$usuario")->whereBetween('created_at',["", "$dataFim"." 23:59"])->paginate(100);
+                    } else {
+                        $hists = Historico::where('usuario','like',"$usuario")->paginate(100);
+                    }
+                }
+            } else {
+                if(isset($dataInicio)){
+                    if(isset($dataFim)){
+                        $hists = Historico::whereBetween('created_at',["$dataInicio"." 00:00", "$dataFim"." 23:59"])->paginate(100);
+                    } else {
+                        $hists = Historico::whereBetween('created_at',["$dataInicio"." 00:00", date("Y/m/d")." 23:59"])->paginate(100);
+                    }
+                } else {
+                    if(isset($dataFim)){
+                        $hists = Historico::whereBetween('created_at',["", "$dataFim"." 23:59"])->paginate(100);
+                    } else {
+                        return redirect('/Historicos');
+                    }
+                }
+            }
+        }
+        $view = "filtro";
+        $users = User::orderBy('name')->get();
+        return view('historico.historico',compact('view','users','hists'));
     }
 
     //CATEGORIA
@@ -37,6 +138,11 @@ class UserController extends Controller
         $cat = new Categoria();
         $cat->nome = $request->input('nomeCategoria');
         $cat->save();
+
+        $hist = new Historico();
+        $hist->acao = "Cadastrou Nova Categoria";
+        $hist->usuario = Auth::user()->name;
+        $hist->save();
         return back();
     }
 
@@ -48,6 +154,10 @@ class UserController extends Controller
             $cat->ativo = $request->input('ativo');
             $cat->save();
         }
+        $hist = new Historico();
+        $hist->acao = "Alterou uma Categoria";
+        $hist->usuario = Auth::user()->name;
+        $hist->save();
         return back();
     }
 
@@ -58,6 +168,10 @@ class UserController extends Controller
             $cat->ativo = false;
             $cat->save();
         }
+        $hist = new Historico();
+        $hist->acao = "Inativou uma Categoria";
+        $hist->usuario = Auth::user()->name;
+        $hist->save();
         return back();
     }
 
@@ -74,6 +188,10 @@ class UserController extends Controller
         $tipo = new TipoAnimal();
         $tipo->nome = $request->input('nome');
         $tipo->save();
+        $hist = new Historico();
+        $hist->acao = "Cadastrou Novo Tipo de Animal";
+        $hist->usuario = Auth::user()->name;
+        $hist->save();
         return back();
     }
 
@@ -85,6 +203,10 @@ class UserController extends Controller
             $tipo->ativo = $request->input('ativo');
             $tipo->save();
         }
+        $hist = new Historico();
+        $hist->acao = "Alterou um Tipo de Animal";
+        $hist->usuario = Auth::user()->name;
+        $hist->save();
         return back();
     }
 
@@ -95,6 +217,10 @@ class UserController extends Controller
             $tipo->ativo = false;
             $tipo->save();
         }
+        $hist = new Historico();
+        $hist->acao = "Inativou um Tipo de Animal";
+        $hist->usuario = Auth::user()->name;
+        $hist->save();
         return back();
     }
 
@@ -111,6 +237,10 @@ class UserController extends Controller
         $marca = new Marca();
         $marca->nome = $request->input('nome');
         $marca->save();
+        $hist = new Historico();
+        $hist->acao = "Cadastrou Nova Marca";
+        $hist->usuario = Auth::user()->name;
+        $hist->save();
         return back();
     }
 
@@ -122,6 +252,10 @@ class UserController extends Controller
             $marca->ativo = $request->input('ativo');
             $marca->save();
         }
+        $hist = new Historico();
+        $hist->acao = "Alterou uma Marca";
+        $hist->usuario = Auth::user()->name;
+        $hist->save();
         return back();
     }
 
@@ -132,6 +266,10 @@ class UserController extends Controller
             $marca->ativo = false;
             $marca->save();
         }
+        $hist = new Historico();
+        $hist->acao = "Inativou uma Marca";
+        $hist->usuario = Auth::user()->name;
+        $hist->save();
         return back();
     }
 
@@ -139,11 +277,12 @@ class UserController extends Controller
     //PRODUTO
     public function indexProdutos()
     {
+        $view = "inicial";
         $prods = Produto::paginate(20);
         $tipos = TipoAnimal::where('ativo',true)->orderBy('nome')->get();
         $marcas = Marca::where('ativo',true)->orderBy('nome')->get();
         $cats = Categoria::where('ativo',true)->orderBy('nome')->get();
-        return view('cadastros.produtos',compact('prods','tipos','marcas','cats'));
+        return view('cadastros.produtos',compact('view','prods','tipos','marcas','cats'));
     }
 
     public function cadastrarProduto(Request $request)
@@ -181,6 +320,10 @@ class UserController extends Controller
             $prod->ativo = $request->input('ativo');
         }
         $prod->save();
+        $hist = new Historico();
+        $hist->acao = "Cadastrou Novo Produto";
+        $hist->usuario = Auth::user()->name;
+        $hist->save();
         return back();
     }
 
@@ -222,6 +365,10 @@ class UserController extends Controller
             }
             $prod->save();
         }
+        $hist = new Historico();
+        $hist->acao = "Alterou um Produto";
+        $hist->usuario = Auth::user()->name;
+        $hist->save();
         return back();
     }
 
@@ -233,6 +380,10 @@ class UserController extends Controller
             $prod->ativo = false;
             $prod->save();
         }
+        $hist = new Historico();
+        $hist->acao = "Inativou um Produto";
+        $hist->usuario = Auth::user()->name;
+        $hist->save();
         return back();
     }
 
@@ -248,78 +399,80 @@ class UserController extends Controller
                 if(isset($tipo)){
                     if(isset($fase)){
                         if(isset($marca)){
-                            $prods = Produto::where('nome','like',"%$nome%")->where('categoria_id',"$cat")->where('tipo_animal_id',"$tipo")->where('tipo_fase',"$fase")->where('marca_id',"$marca")->orderBy('nome')->paginate(10);
+                            $prods = Produto::where('nome','like',"%$nome%")->where('categoria_id',"$cat")->where('tipo_animal_id',"$tipo")->where('tipo_fase',"$fase")->where('marca_id',"$marca")->orderBy('nome')->paginate(100);
                         } else {
-                            $prods = Produto::where('nome','like',"%$nome%")->where('categoria_id',"$cat")->where('tipo_animal_id',"$tipo")->where('tipo_fase',"$fase")->orderBy('nome')->paginate(10); 
+                            $prods = Produto::where('nome','like',"%$nome%")->where('categoria_id',"$cat")->where('tipo_animal_id',"$tipo")->where('tipo_fase',"$fase")->orderBy('nome')->paginate(100); 
                         }
                     } else {
-                        $prods = Produto::where('nome','like',"%$nome%")->where('categoria_id',"$cat")->where('tipo_animal_id',"$tipo")->orderBy('nome')->paginate(10);
+                        $prods = Produto::where('nome','like',"%$nome%")->where('categoria_id',"$cat")->where('tipo_animal_id',"$tipo")->orderBy('nome')->paginate(100);
                     }
                 } else {
-                    $prods = Produto::where('nome','like',"%$nome%")->where('categoria_id',"$cat")->orderBy('nome')->paginate(10);
+                    $prods = Produto::where('nome','like',"%$nome%")->where('categoria_id',"$cat")->orderBy('nome')->paginate(100);
                 }
             } else {
-                $prods = Produto::where('nome','like',"%$nome%")->orderBy('nome')->paginate(10);
+                $prods = Produto::where('nome','like',"%$nome%")->orderBy('nome')->paginate(100);
             }
         } else {
             if(isset($cat)){
                 if(isset($tipo)){
                     if(isset($fase)){
                         if(isset($marca)){
-                            $prods = Produto::where('categoria_id',"$cat")->where('tipo_animal_id',"$tipo")->where('tipo_fase',"$fase")->where('marca_id',"$marca")->orderBy('nome')->paginate(10);
+                            $prods = Produto::where('categoria_id',"$cat")->where('tipo_animal_id',"$tipo")->where('tipo_fase',"$fase")->where('marca_id',"$marca")->orderBy('nome')->paginate(100);
                         } else {
-                            $prods = Produto::where('categoria_id',"$cat")->where('tipo_animal_id',"$tipo")->where('tipo_fase',"$fase")->orderBy('nome')->paginate(10); 
+                            $prods = Produto::where('categoria_id',"$cat")->where('tipo_animal_id',"$tipo")->where('tipo_fase',"$fase")->orderBy('nome')->paginate(100); 
                         }
                     } else {
-                        $prods = Produto::where('categoria_id',"$cat")->where('tipo_animal_id',"$tipo")->orderBy('nome')->paginate(10);
+                        $prods = Produto::where('categoria_id',"$cat")->where('tipo_animal_id',"$tipo")->orderBy('nome')->paginate(100);
                     }
                 } else {
-                    $prods = Produto::where('categoria_id',"$cat")->orderBy('nome')->paginate(10);
+                    $prods = Produto::where('categoria_id',"$cat")->orderBy('nome')->paginate(100);
                 }
             } else {
                 if(isset($tipo)){
                     if(isset($fase)){
                         if(isset($marca)){
-                            $prods = Produto::where('tipo_animal_id',"$tipo")->where('tipo_fase',"$fase")->where('marca_id',"$marca")->orderBy('nome')->paginate(10);
+                            $prods = Produto::where('tipo_animal_id',"$tipo")->where('tipo_fase',"$fase")->where('marca_id',"$marca")->orderBy('nome')->paginate(100);
                         } else {
-                            $prods = Produto::where('tipo_animal_id',"$tipo")->where('tipo_fase',"$fase")->orderBy('nome')->paginate(10); 
+                            $prods = Produto::where('tipo_animal_id',"$tipo")->where('tipo_fase',"$fase")->orderBy('nome')->paginate(100); 
                         }
                     } else {
-                        $prods = Produto::where('tipo_animal_id',"$tipo")->orderBy('nome')->paginate(10);
+                        $prods = Produto::where('tipo_animal_id',"$tipo")->orderBy('nome')->paginate(100);
                     }
                 } else {
                     if(isset($fase)){
                         if(isset($marca)){
-                            $prods = Produto::where('tipo_fase',"$fase")->where('marca_id',"$marca")->orderBy('nome')->paginate(10);
+                            $prods = Produto::where('tipo_fase',"$fase")->where('marca_id',"$marca")->orderBy('nome')->paginate(100);
                         } else {
-                            $prods = Produto::where('tipo_fase',"$fase")->orderBy('nome')->paginate(10); 
+                            $prods = Produto::where('tipo_fase',"$fase")->orderBy('nome')->paginate(100); 
                         }
                     } else {
                         if(isset($marca)){
-                            $prods = Produto::where('marca_id',"$marca")->orderBy('nome')->paginate(10);
+                            $prods = Produto::where('marca_id',"$marca")->orderBy('nome')->paginate(100);
                         } else {
-                            return redirect('/admin/produtos');
+                            return redirect('/produtos');
                         }
                     }
                 }
             }
         }
         
+        $view = "filtro";
         $tipos = TipoAnimal::where('ativo',true)->orderBy('nome')->get();
         $marcas = Marca::where('ativo',true)->orderBy('nome')->get();
         $cats = Categoria::where('ativo',true)->orderBy('nome')->get();
-        return view('cadastros.produtos',compact('prods','tipos','marcas','cats'));
+        return view('cadastros.produtos',compact('view','prods','tipos','marcas','cats'));
     }
 
 
     //ESTOQUE
     public function indexEstoque()
     {
+        $view = "inicial";
         $prods = Produto::paginate(20);
         $tipos = TipoAnimal::all();
         $marcas = Marca::all();
         $cats = Categoria::all();
-        return view('estoque.estoque_produtos',compact('prods','tipos','marcas','cats'));
+        return view('estoque.estoque_produtos',compact('view','prods','tipos','marcas','cats'));
     }
 
     public function entradaEstoque(Request $request, $id)
@@ -342,6 +495,10 @@ class UserController extends Controller
                 $prod->save();
             }
         }
+        $hist = new Historico();
+        $hist->acao = "Fez Entrada no Estoque";
+        $hist->usuario = Auth::user()->name;
+        $hist->save();
         return back();
     }
 
@@ -365,6 +522,10 @@ class UserController extends Controller
                 $prod->save();
             }
         }
+        $hist = new Historico();
+        $hist->acao = "Fez Saída no Estoque";
+        $hist->usuario = Auth::user()->name;
+        $hist->save();
         return back();
     }
 
@@ -380,75 +541,158 @@ class UserController extends Controller
                 if(isset($tipo)){
                     if(isset($fase)){
                         if(isset($marca)){
-                            $prods = Produto::where('nome','like',"%$nome%")->where('categoria_id',"$cat")->where('tipo_animal_id',"$tipo")->where('tipo_fase',"$fase")->where('marca_id',"$marca")->orderBy('nome')->paginate(10);
+                            $prods = Produto::where('nome','like',"%$nome%")->where('categoria_id',"$cat")->where('tipo_animal_id',"$tipo")->where('tipo_fase',"$fase")->where('marca_id',"$marca")->orderBy('nome')->paginate(100);
                         } else {
-                            $prods = Produto::where('nome','like',"%$nome%")->where('categoria_id',"$cat")->where('tipo_animal_id',"$tipo")->where('tipo_fase',"$fase")->orderBy('nome')->paginate(10); 
+                            $prods = Produto::where('nome','like',"%$nome%")->where('categoria_id',"$cat")->where('tipo_animal_id',"$tipo")->where('tipo_fase',"$fase")->orderBy('nome')->paginate(100); 
                         }
                     } else {
-                        $prods = Produto::where('nome','like',"%$nome%")->where('categoria_id',"$cat")->where('tipo_animal_id',"$tipo")->orderBy('nome')->paginate(10);
+                        $prods = Produto::where('nome','like',"%$nome%")->where('categoria_id',"$cat")->where('tipo_animal_id',"$tipo")->orderBy('nome')->paginate(100);
                     }
                 } else {
-                    $prods = Produto::where('nome','like',"%$nome%")->where('categoria_id',"$cat")->orderBy('nome')->paginate(10);
+                    $prods = Produto::where('nome','like',"%$nome%")->where('categoria_id',"$cat")->orderBy('nome')->paginate(100);
                 }
             } else {
-                $prods = Produto::where('nome','like',"%$nome%")->orderBy('nome')->paginate(10);
+                $prods = Produto::where('nome','like',"%$nome%")->orderBy('nome')->paginate(100);
             }
         } else {
             if(isset($cat)){
                 if(isset($tipo)){
                     if(isset($fase)){
                         if(isset($marca)){
-                            $prods = Produto::where('categoria_id',"$cat")->where('tipo_animal_id',"$tipo")->where('tipo_fase',"$fase")->where('marca_id',"$marca")->orderBy('nome')->paginate(10);
+                            $prods = Produto::where('categoria_id',"$cat")->where('tipo_animal_id',"$tipo")->where('tipo_fase',"$fase")->where('marca_id',"$marca")->orderBy('nome')->paginate(100);
                         } else {
-                            $prods = Produto::where('categoria_id',"$cat")->where('tipo_animal_id',"$tipo")->where('tipo_fase',"$fase")->orderBy('nome')->paginate(10); 
+                            $prods = Produto::where('categoria_id',"$cat")->where('tipo_animal_id',"$tipo")->where('tipo_fase',"$fase")->orderBy('nome')->paginate(100); 
                         }
                     } else {
-                        $prods = Produto::where('categoria_id',"$cat")->where('tipo_animal_id',"$tipo")->orderBy('nome')->paginate(10);
+                        $prods = Produto::where('categoria_id',"$cat")->where('tipo_animal_id',"$tipo")->orderBy('nome')->paginate(100);
                     }
                 } else {
-                    $prods = Produto::where('categoria_id',"$cat")->orderBy('nome')->paginate(10);
+                    $prods = Produto::where('categoria_id',"$cat")->orderBy('nome')->paginate(100);
                 }
             } else {
                 if(isset($tipo)){
                     if(isset($fase)){
                         if(isset($marca)){
-                            $prods = Produto::where('tipo_animal_id',"$tipo")->where('tipo_fase',"$fase")->where('marca_id',"$marca")->orderBy('nome')->paginate(10);
+                            $prods = Produto::where('tipo_animal_id',"$tipo")->where('tipo_fase',"$fase")->where('marca_id',"$marca")->orderBy('nome')->paginate(100);
                         } else {
-                            $prods = Produto::where('tipo_animal_id',"$tipo")->where('tipo_fase',"$fase")->orderBy('nome')->paginate(10); 
+                            $prods = Produto::where('tipo_animal_id',"$tipo")->where('tipo_fase',"$fase")->orderBy('nome')->paginate(100); 
                         }
                     } else {
-                        $prods = Produto::where('tipo_animal_id',"$tipo")->orderBy('nome')->paginate(10);
+                        $prods = Produto::where('tipo_animal_id',"$tipo")->orderBy('nome')->paginate(100);
                     }
                 } else {
                     if(isset($fase)){
                         if(isset($marca)){
-                            $prods = Produto::where('tipo_fase',"$fase")->where('marca_id',"$marca")->orderBy('nome')->paginate(10);
+                            $prods = Produto::where('tipo_fase',"$fase")->where('marca_id',"$marca")->orderBy('nome')->paginate(100);
                         } else {
-                            $prods = Produto::where('tipo_fase',"$fase")->orderBy('nome')->paginate(10); 
+                            $prods = Produto::where('tipo_fase',"$fase")->orderBy('nome')->paginate(100); 
                         }
                     } else {
                         if(isset($marca)){
-                            $prods = Produto::where('marca_id',"$marca")->orderBy('nome')->paginate(10);
+                            $prods = Produto::where('marca_id',"$marca")->orderBy('nome')->paginate(100);
                         } else {
-                            return redirect('/admin/estoque');
+                            return redirect('/estoque/lancamentos');
                         }
                     }
                 }
             }
         }
-        
+        $view = "filtro";
         $tipos = TipoAnimal::all();
         $marcas = Marca::all();
         $cats = Categoria::all();
-        return view('estoque.estoque_produtos',compact('prods','tipos','marcas','cats'));
+        return view('estoque.estoque_produtos',compact('view','prods','tipos','marcas','cats'));
     }
+
+    //ENTRADAS & SAIDAS
+    public function indexEntradaSaidas()
+    {
+        $rels = EntradaSaida::orderBy('created_at', 'desc')->paginate(20);
+        $prods = Produto::where('ativo',true)->orderBy('nome')->get();
+        $view = "inicial";
+        return view('estoque.entrada_saida', compact('view','rels','prods'));
+    }
+
+    public function filtroEntradaSaidas(Request $request)
+    {
+        $tipo = $request->input('tipo');
+        $produto = $request->input('produto');
+        $dataInicio = $request->input('dataInicio');
+        $dataFim = $request->input('dataFim');
+        if(isset($tipo)){
+            if(isset($produto)){
+                if(isset($dataInicio)){
+                    if(isset($dataFim)){
+                        $rels = EntradaSaida::where('tipo','like',"%$tipo%")->where('produto_id',"$produto")->whereBetween('created_at',["$dataInicio"." 00:00", "$dataFim"." 23:59"])->paginate(100);
+                    } else {
+                        $rels = EntradaSaida::where('tipo','like',"%$tipo%")->where('produto_id',"$produto")->whereBetween('created_at',["$dataInicio"." 00:00", date("Y/m/d")." 23:59"])->paginate(100);
+                    }
+                } else {
+                    if(isset($dataFim)){
+                        $rels = EntradaSaida::where('tipo','like',"%$tipo%")->where('produto_id',"$produto")->whereBetween('created_at',["", "$dataFim"." 23:59"])->paginate(100);
+                    } else {
+                        $rels = EntradaSaida::where('tipo','like',"%$tipo%")->where('produto_id',"$produto")->paginate(100);
+                    }
+                }
+            } else {
+                if(isset($dataInicio)){
+                    if(isset($dataFim)){
+                        $rels = EntradaSaida::where('tipo','like',"%$tipo%")->whereBetween('created_at',["$dataInicio"." 00:00", "$dataFim"." 23:59"])->paginate(100);
+                    } else {
+                        $rels = EntradaSaida::where('tipo','like',"%$tipo%")->whereBetween('created_at',["$dataInicio"." 00:00", date("Y/m/d")." 23:59"])->paginate(100);
+                    }
+                } else {
+                    if(isset($dataFim)){
+                        $rels = EntradaSaida::where('tipo','like',"%$tipo%")->whereBetween('created_at',["", "$dataFim"." 23:59"])->paginate(100);
+                    } else {
+                        $rels = EntradaSaida::where('tipo','like',"%$tipo%")->paginate(100);
+                    }
+                }
+            }
+        } else {
+            if(isset($produto)){
+                if(isset($dataInicio)){
+                    if(isset($dataFim)){
+                        $rels = EntradaSaida::where('produto_id',"$produto")->whereBetween('created_at',["$dataInicio"." 00:00", "$dataFim"." 23:59"])->paginate(100);
+                    } else {
+                        $rels = EntradaSaida::where('produto_id',"$produto")->whereBetween('created_at',["$dataInicio"." 00:00", date("Y/m/d")." 23:59"])->paginate(100);
+                    }
+                } else {
+                    if(isset($dataFim)){
+                        $rels = EntradaSaida::where('produto_id',"$produto")->whereBetween('created_at',["", "$dataFim"." 23:59"])->paginate(100);
+                    } else {
+                        $rels = EntradaSaida::where('produto_id',"$produto")->paginate(100);
+                    }
+                }
+            } else {
+                if(isset($dataInicio)){
+                    if(isset($dataFim)){
+                        $rels = EntradaSaida::whereBetween('created_at',["$dataInicio"." 00:00", "$dataFim"." 23:59"])->paginate(100);
+                    } else {
+                        $rels = EntradaSaida::whereBetween('created_at',["$dataInicio"." 00:00", date("Y/m/d")." 23:59"])->paginate(100);
+                    }
+                } else {
+                    if(isset($dataFim)){
+                        $rels = EntradaSaida::whereBetween('created_at',["", "$dataFim"." 23:59"])->paginate(100);
+                    } else {
+                        return redirect('/estoque/historicos');
+                    }
+                }
+            }
+        }
+        $prods = Produto::where('ativo',true)->orderBy('nome')->get();
+        $view = "filtro";
+        return view('estoque.entrada_saida', compact('view','rels','prods'));
+    }
+
 
 
     //CLIENTE
     public function indexClientes()
     {
+        $view = "inicial";
         $clientes = Cliente::paginate(20);
-        return view('cadastros.clientes',compact('clientes'));
+        return view('cadastros.clientes',compact('view','clientes'));
     }
 
     public function cadastrarCliente(Request $request)
@@ -481,6 +725,10 @@ class UserController extends Controller
         $cliTel->cliente_id = $cliente->id;
         $cliTel->telefone_id = $telefone->id;
         $cliTel->save();
+        $hist = new Historico();
+        $hist->acao = "Cadastrou Novo Cliente";
+        $hist->usuario = Auth::user()->name;
+        $hist->save();
         return back();
     }
 
@@ -501,28 +749,23 @@ class UserController extends Controller
             }
             $aluno->save();
         }
+        $hist = new Historico();
+        $hist->acao = "Alterou um Cliente";
+        $hist->usuario = Auth::user()->name;
+        $hist->save();
         return back();
     }
 
     public function filtroCliente(Request $request)
     {
         $nome = $request->input('nome');
-        $email = $request->input('email');
         if(isset($nome)){
-            if(isset($email)){
-                $clientes = Cliente::where('name','like',"%$nome%")->where('email','like',"%$email%")->paginate(100);
-            } else {
-                $clientes = Cliente::where('name','like',"%$nome%")->paginate(100);
-            }
+            $clientes = Cliente::where('nome','like',"%$nome%")->paginate(100);
         } else {
-            if(isset($email)){
-                $clientes = Cliente::where('email','like',"%$email%")->paginate(100);
-            } else {
-                return redirect('/clientes');
-            }
+            return redirect('/clientes');
         }
-        
-        return view('cadastros.clientes',compact('clientes'));
+        $view = "filtro";
+        return view('cadastros.clientes',compact('view','clientes'));
     }
 
     public function cadastrarTelefone(Request $request, $id)
@@ -537,6 +780,11 @@ class UserController extends Controller
         $clienteTelefone->telefone_id = $telefone->id;
         $clienteTelefone->save();
 
+        $hist = new Historico();
+        $hist->acao = "Cadastrou um Telefone de Cliente";
+        $hist->usuario = Auth::user()->name;
+        $hist->save();
+
         return back();
     }
 
@@ -547,6 +795,11 @@ class UserController extends Controller
             $telefone->ativo = false;
             $telefone->save();
         }
+        $hist = new Historico();
+        $hist->acao = "Inativou um Telefone de Cliente";
+        $hist->usuario = Auth::user()->name;
+        $hist->save();
+
         return back();
     }
 
@@ -564,6 +817,12 @@ class UserController extends Controller
         $serv->nome = $request->input('nome');
         $serv->preco = $request->input('preco');
         $serv->save();
+
+        $hist = new Historico();
+        $hist->acao = "Cadastrou Novo Serviço";
+        $hist->usuario = Auth::user()->name;
+        $hist->save();
+
         return back();
     }
 
@@ -575,6 +834,12 @@ class UserController extends Controller
             $serv->preco = $request->input('preco');
             $serv->save();
         }
+
+        $hist = new Historico();
+        $hist->acao = "Alterou um Serviço";
+        $hist->usuario = Auth::user()->name;
+        $hist->save();
+
         return back();
     }
 
@@ -585,6 +850,12 @@ class UserController extends Controller
             $serv->ativo = false;
             $serv->save();
         }
+
+        $hist = new Historico();
+        $hist->acao = "Inativou um Serviço";
+        $hist->usuario = Auth::user()->name;
+        $hist->save();
+
         return back();
     }
 
@@ -606,6 +877,12 @@ class UserController extends Controller
         $raca->nome = $request->input('nome');
         $raca->descricao = $request->input('descricao');
         $raca->save();
+
+        $hist = new Historico();
+        $hist->acao = "Cadastrou Nova Raça";
+        $hist->usuario = Auth::user()->name;
+        $hist->save();
+
         return back();
     }
 
@@ -622,6 +899,12 @@ class UserController extends Controller
             $raca->descricao = $request->input('descricao');
             $raca->save();
         }
+
+        $hist = new Historico();
+        $hist->acao = "Alterou uma Raça";
+        $hist->usuario = Auth::user()->name;
+        $hist->save();
+
         return back();
     }
 
@@ -629,10 +912,11 @@ class UserController extends Controller
     //PET
     public function indexPets()
     {
+        $view = "inicial";
         $pets = Pet::paginate(20);
         $racas = Raca::orderBy('nome')->get();
         $clientes = Cliente::orderBy('nome')->get();
-        return view('cadastros.pets',compact('pets','racas','clientes'));
+        return view('cadastros.pets',compact('view','pets','racas','clientes'));
     }
 
     public function cadastrarPet(Request $request)
@@ -667,6 +951,12 @@ class UserController extends Controller
             $pet->cliente_id = $request->input('cliente');
         }
         $pet->save();
+
+        $hist = new Historico();
+        $hist->acao = "Cadastrou Novo Pet";
+        $hist->usuario = Auth::user()->name;
+        $hist->save();
+
         return back();
     }
 
@@ -705,95 +995,433 @@ class UserController extends Controller
             }
             $pet->save();
         }
+
+        $hist = new Historico();
+        $hist->acao = "Alterou um Pet";
+        $hist->usuario = Auth::user()->name;
+        $hist->save();
+
         return back();
     }
 
     public function apagarPet($id)
     {
         $pet = Pet::find($id);
-        if(isset($prod)){
+        if(isset($pet)){
             Storage::disk('public')->delete($pet->foto);
             $pet->ativo = false;
             $pet->save();
         }
+
+        $hist = new Historico();
+        $hist->acao = "Inativou um Pet";
+        $hist->usuario = Auth::user()->name;
+        $hist->save();
+
         return back();
     }
 
     public function filtroPet(Request $request)
     {
         $nome = $request->input('nome');
-        $cat = $request->input('categoria');
-        $tipo = $request->input('tipo');
-        $fase = $request->input('fase');
-        $marca = $request->input('marca');
+        $raca = $request->input('raca');
+        $cliente = $request->input('cliente');
         if(isset($nome)){
-            if(isset($cat)){
-                if(isset($tipo)){
-                    if(isset($fase)){
-                        if(isset($marca)){
-                            $prods = Produto::where('nome','like',"%$nome%")->where('categoria_id',"$cat")->where('tipo_animal_id',"$tipo")->where('tipo_fase',"$fase")->where('marca_id',"$marca")->orderBy('nome')->paginate(10);
-                        } else {
-                            $prods = Produto::where('nome','like',"%$nome%")->where('categoria_id',"$cat")->where('tipo_animal_id',"$tipo")->where('tipo_fase',"$fase")->orderBy('nome')->paginate(10); 
-                        }
-                    } else {
-                        $prods = Produto::where('nome','like',"%$nome%")->where('categoria_id',"$cat")->where('tipo_animal_id',"$tipo")->orderBy('nome')->paginate(10);
-                    }
+            if(isset($raca)){
+                if(isset($cliente)){
+                    $pets = Pet::where('nome','like',"%$nome%")->where('raca_id',"$raca")->where('cliente_id',"$cliente")->orderBy('nome')->paginate(100);
                 } else {
-                    $prods = Produto::where('nome','like',"%$nome%")->where('categoria_id',"$cat")->orderBy('nome')->paginate(10);
+                    $pets = Pet::where('nome','like',"%$nome%")->where('raca_id',"$raca")->orderBy('nome')->paginate(100); 
                 }
             } else {
-                $prods = Produto::where('nome','like',"%$nome%")->orderBy('nome')->paginate(10);
+                if(isset($cliente)){
+                    $pets = Pet::where('nome','like',"%$nome%")->where('cliente_id',"$cliente")->orderBy('nome')->paginate(100);
+                } else {
+                    $pets = Pet::where('nome','like',"%$nome%")->orderBy('nome')->paginate(100);
+                }
             }
         } else {
-            if(isset($cat)){
-                if(isset($tipo)){
-                    if(isset($fase)){
-                        if(isset($marca)){
-                            $prods = Produto::where('categoria_id',"$cat")->where('tipo_animal_id',"$tipo")->where('tipo_fase',"$fase")->where('marca_id',"$marca")->orderBy('nome')->paginate(10);
-                        } else {
-                            $prods = Produto::where('categoria_id',"$cat")->where('tipo_animal_id',"$tipo")->where('tipo_fase',"$fase")->orderBy('nome')->paginate(10); 
-                        }
-                    } else {
-                        $prods = Produto::where('categoria_id',"$cat")->where('tipo_animal_id',"$tipo")->orderBy('nome')->paginate(10);
-                    }
+            if(isset($raca)){
+                if(isset($cliente)){
+                    $pets = Pet::where('raca_id',"$raca")->where('cliente_id',"$cliente")->orderBy('nome')->paginate(100);
                 } else {
-                    $prods = Produto::where('categoria_id',"$cat")->orderBy('nome')->paginate(10);
+                    $pets = Pet::where('raca_id',"$raca")->orderBy('nome')->paginate(100); 
                 }
             } else {
-                if(isset($tipo)){
-                    if(isset($fase)){
-                        if(isset($marca)){
-                            $prods = Produto::where('tipo_animal_id',"$tipo")->where('tipo_fase',"$fase")->where('marca_id',"$marca")->orderBy('nome')->paginate(10);
-                        } else {
-                            $prods = Produto::where('tipo_animal_id',"$tipo")->where('tipo_fase',"$fase")->orderBy('nome')->paginate(10); 
-                        }
+                if(isset($cliente)){
+                    $pets = Pet::where('cliente_id',"$cliente")->orderBy('nome')->paginate(100);
+                } else {
+                    return redirect('/pets');
+                }
+            }
+        }
+        $view = "filtro";
+        $racas = Raca::orderBy('nome')->get();
+        $clientes = Cliente::orderBy('nome')->get();
+        return view('cadastros.pets',compact('view','pets','racas','clientes'));
+    }
+
+
+    //VENDA DE SERVIÇO
+    public function indexVendaServicos()
+    {
+        $view = "inicial";
+        $pets = Pet::orderBy('nome')->get();
+        $servs = Servico::orderBy('nome')->get();
+        $vendaServs = VendaServico::orderBy('created_at', 'desc')->paginate(20);
+        return view('vendas.venda_servicos',compact('view','pets','servs','vendaServs'));
+    }
+
+    public function cadastrarVendaServico(Request $request)
+    {
+        $vendaServ = new VendaServico();
+        if($request->input('valor')!=""){
+            $vendaServ->valor = $request->input('valor');
+        }
+        if($request->input('desconto')!=""){
+            $vendaServ->desconto = $request->input('desconto');
+        }
+        if($request->input('observacao')!=""){
+            $vendaServ->observacao = $request->input('observacao');
+        }
+        if($request->input('formaPagamento')!=""){
+            $vendaServ->forma_pagamento = $request->input('formaPagamento');
+        }
+        if($request->input('servico')!=""){
+            $vendaServ->servico_id = $request->input('servico');
+        }
+        if($request->input('pet')!=""){
+            $vendaServ->pet_id = $request->input('pet');
+        }
+        $vendaServ->save();
+
+        $lanc = new Lancamento();
+        $lanc->tipo = "deposito";
+        $lanc->valor = $request->input('valor') - $request->input('desconto');
+        $lanc->usuario = Auth::user()->name;
+        $lanc->motivo = "Venda Serviço";
+        $lanc->save();
+        $saldo = Saldo::find(1);
+        $saldo->saldo += $request->input('valor') - $request->input('desconto');
+        $saldo->save();
+
+        $hist = new Historico();
+        $hist->acao = "Cadastrou Nova Venda de Serviço";
+        $hist->usuario = Auth::user()->name;
+        $hist->save();
+
+        return back();
+    }
+
+    public function apagarVendaServico($id)
+    {
+        $vendaServ = VendaServico::find($id);
+        if(isset($vendaServ)){
+            $saldo = Saldo::find(1);
+            $saldo->saldo -= $vendaServ->valor - $vendaServ->desconto;
+            $saldo->save();
+            $vendaServ->delete();
+        }
+
+        $hist = new Historico();
+        $hist->acao = "Apagou uma Venda de Serviço";
+        $hist->usuario = Auth::user()->name;
+        $hist->save();
+
+        return back();
+    }
+
+    public function filtroVendaServico(Request $request)
+    {
+        $servico = $request->input('servico');
+        $pet = $request->input('pet');
+        $formaPagamento = $request->input('formaPagamento');
+        if(isset($formaPagamento)){
+            if(isset($servico)){
+                if(isset($pet)){
+                    $vendaServs = VendaServico::where('nome','like',"%$formaPagamento%")->where('servico_id',"$servico")->where('pet_id',"$pet")->orderBy('created_at', 'desc')->paginate(50);
+                } else {
+                    $vendaServs = VendaServico::where('nome','like',"%$formaPagamento%")->where('servico_id',"$servico")->orderBy('created_at', 'desc')->paginate(50); 
+                }
+            } else {
+                if(isset($pet)){
+                    $vendaServs = VendaServico::where('nome','like',"%$formaPagamento%")->where('pet_id',"$pet")->orderBy('created_at', 'desc')->paginate(50);
+                } else {
+                    $vendaServs = VendaServico::where('nome','like',"%$formaPagamento%")->orderBy('created_at', 'desc')->paginate(50);
+                }
+            }
+        } else {
+            if(isset($servico)){
+                if(isset($pet)){
+                    $vendaServs = VendaServico::where('servico_id',"$servico")->where('pet_id',"$pet")->orderBy('created_at', 'desc')->paginate(50);
+                } else {
+                    $vendaServs = VendaServico::where('servico_id',"$servico")->orderBy('created_at', 'desc')->paginate(50); 
+                }
+            } else {
+                if(isset($pet)){
+                    $vendaServs = VendaServico::where('pet_id',"$pet")->orderBy('created_at', 'desc')->paginate(50);
+                } else {
+                    return redirect('/vendas/servicos');
+                }
+            }
+        }
+        $view = "filtro";
+        $pets = Pet::orderBy('nome')->get();
+        $servs = Servico::orderBy('nome')->get();
+        return view('vendas.venda_servicos',compact('view','vendaServs','pets','servs'));
+    }
+
+    
+    //VENDA DE PRODUTO
+    public function indexVendaProdutos()
+    {
+        $view = "inicial";
+        $clientes = Cliente::orderBy('nome')->get();
+        $produtos = Produto::orderBy('nome')->get();
+        $vendaProds = VendaProduto::orderBy('created_at', 'desc')->paginate(20);
+        return view('vendas.venda_produtos',compact('view','clientes','produtos','vendaProds'));
+    }
+
+    public function cadastrarVendaProduto(Request $request)
+    {
+        $vendaProd = new VendaProduto();
+        if($request->input('valor')!=""){
+            $vendaProd->valor = $request->input('valor');
+        }
+        if($request->input('desconto')!=""){
+            $vendaProd->desconto = $request->input('desconto');
+        }
+        if($request->input('observacao')!=""){
+            $vendaProd->observacao = $request->input('observacao');
+        }
+        if($request->input('formaPagamento')!=""){
+            $vendaProd->forma_pagamento = $request->input('formaPagamento');
+        }
+        if($request->input('produto')!=""){
+            $vendaProd->produto_id = $request->input('produto');
+        }
+        if($request->input('cliente')!=""){
+            $vendaProd->cliente_id = $request->input('cliente');
+        }
+        $vendaProd->save();
+
+        $prod = Produto::find($request->input('produto'));
+        if(isset($prod)){
+                $es = new EntradaSaida();
+                $es->tipo = "saida";
+                $es->produto_id = $request->input('produto');
+                $es->quantidade = 1;
+                $es->usuario = Auth::user()->name;
+                $es->motivo = "Venda Produto";
+                $es->save();
+                $prod->estoque -= $request->input('qtd');
+                $prod->save();
+        }
+
+        $lanc = new Lancamento();
+        $lanc->tipo = "deposito";
+        $lanc->valor = $request->input('valor') - $request->input('desconto');
+        $lanc->usuario = Auth::user()->name;
+        $lanc->motivo = "Venda Produto";
+        $lanc->save();
+        $saldo = Saldo::find(1);
+        $saldo->saldo += $request->input('valor') - $request->input('desconto');
+        $saldo->save();
+
+        $hist = new Historico();
+        $hist->acao = "Cadastrou Nova Venda de Produto";
+        $hist->usuario = Auth::user()->name;
+        $hist->save();
+
+        return back();
+    }
+
+    public function apagarVendaProduto($id)
+    {
+        $vendaProd = VendaProduto::find($id);
+        if(isset($vendaProd)){
+            $saldo = Saldo::find(1);
+            $saldo->saldo -= $vendaProd->valor - $vendaProd->desconto;
+            $saldo->save();
+            $vendaProd->delete();
+        }
+
+        $hist = new Historico();
+        $hist->acao = "Apagou uma Venda de Produto";
+        $hist->usuario = Auth::user()->name;
+        $hist->save();
+
+        return back();
+    }
+
+    public function filtroVendaProduto(Request $request)
+    {
+        $produto = $request->input('produto');
+        $cliente = $request->input('cliente');
+        $formaPagamento = $request->input('formaPagamento');
+        if(isset($formaPagamento)){
+            if(isset($produto)){
+                if(isset($cliente)){
+                    $vendaProds = VendaProduto::where('nome','like',"%$formaPagamento%")->where('produto_id',"$produto")->where('cliente_id',"$cliente")->orderBy('created_at', 'desc')->paginate(50);
+                } else {
+                    $vendaProds = VendaProduto::where('nome','like',"%$formaPagamento%")->where('produto_id',"$produto")->orderBy('created_at', 'desc')->paginate(50); 
+                }
+            } else {
+                if(isset($cliente)){
+                    $vendaProds = VendaProduto::where('nome','like',"%$formaPagamento%")->where('cliente_id',"$cliente")->orderBy('created_at', 'desc')->paginate(50);
+                } else {
+                    $vendaProds = VendaProduto::where('nome','like',"%$formaPagamento%")->orderBy('created_at', 'desc')->paginate(50);
+                }
+            }
+        } else {
+            if(isset($produto)){
+                if(isset($cliente)){
+                    $vendaProds = VendaProduto::where('produto_id',"$produto")->where('cliente_id',"$cliente")->orderBy('created_at', 'desc')->paginate(50);
+                } else {
+                    $vendaProds = VendaProduto::where('produto_id',"$produto")->orderBy('created_at', 'desc')->paginate(50); 
+                }
+            } else {
+                if(isset($cliente)){
+                    $vendaProds = VendaProduto::where('cliente_id',"$cliente")->orderBy('created_at', 'desc')->paginate(50);
+                } else {
+                    return redirect('/vendas/produtos');
+                }
+            }
+        }
+        $view = "filtro";
+        $clientes = Cliente::orderBy('nome')->get();
+        $produtos = Produto::orderBy('nome')->get();
+        return view('vendas.venda_produtos',compact('view','vendaProds','clientes','produtos'));
+    }
+
+
+    //LANÇAMENTOS   
+    public function indexLancamentos()
+    {
+        $view = "inicial";
+        $users = User::orderBy('name')->get();
+        $lancs = Lancamento::orderBy('created_at', 'desc')->paginate(20);
+        $saldos = Saldo::where('nome','principal')->get();
+        return view('lancamentos.lancamentos',compact('view','users','lancs','saldos'));
+    }
+
+    public function depositoLancamento(Request $request)
+    {
+        $lanc = new Lancamento();
+        $lanc->tipo = "deposito";
+        $lanc->valor = $request->input('valor');
+        $lanc->usuario = Auth::user()->name;
+        $lanc->motivo = $request->input('motivo');
+        $lanc->save();
+
+        $saldo = Saldo::find(1);
+        $saldo->saldo += $request->input('valor');
+        $saldo->save();
+
+        $hist = new Historico();
+        $hist->acao = "Fez um Depósito";
+        $hist->usuario = Auth::user()->name;
+        $hist->save();
+
+        return back();
+    }
+
+    public function retiradaLancamento(Request $request)
+    {
+        $lanc = new Lancamento();
+        $lanc->tipo = "retirada";
+        $lanc->valor = $request->input('valor');
+        $lanc->usuario = Auth::user()->name;
+        $lanc->motivo = $request->input('motivo');
+        $lanc->save();
+
+        $saldo = Saldo::find(1);
+        $saldo->saldo -= $request->input('valor');
+        $saldo->save();
+
+        $hist = new Historico();
+        $hist->acao = "Fez uma Retirada";
+        $hist->usuario = Auth::user()->name;
+        $hist->save();
+
+        return back();
+    }
+
+    public function filtroLancamento(Request $request)
+    {
+        $tipo = $request->input('tipo');
+        if($request->input('user')!=""){
+            $userId = $request->input('user');
+            $user = User::find($userId);
+            $usuario = $user->name;
+        }
+        $dataInicio = $request->input('dataInicio');
+        $dataFim = $request->input('dataFim');
+        if(isset($tipo)){
+            if(isset($user)){
+                if(isset($dataInicio)){
+                    if(isset($dataFim)){
+                        $lancs = Lancamento::where('tipo','like',"%$tipo%")->where('usuario','like',"$usuario")->whereBetween('created_at',["$dataInicio"." 00:00", "$dataFim"." 23:59"])->paginate(100);
                     } else {
-                        $prods = Produto::where('tipo_animal_id',"$tipo")->orderBy('nome')->paginate(10);
+                        $lancs = Lancamento::where('tipo','like',"%$tipo%")->where('usuario','like',"$usuario")->whereBetween('created_at',["$dataInicio"." 00:00", date("Y/m/d")." 23:59"])->paginate(100);
                     }
                 } else {
-                    if(isset($fase)){
-                        if(isset($marca)){
-                            $prods = Produto::where('tipo_fase',"$fase")->where('marca_id',"$marca")->orderBy('nome')->paginate(10);
-                        } else {
-                            $prods = Produto::where('tipo_fase',"$fase")->orderBy('nome')->paginate(10); 
-                        }
+                    if(isset($dataFim)){
+                        $lancs = Lancamento::where('tipo','like',"%$tipo%")->where('usuario','like',"$usuario")->whereBetween('created_at',["", "$dataFim"." 23:59"])->paginate(100);
                     } else {
-                        if(isset($marca)){
-                            $prods = Produto::where('marca_id',"$marca")->orderBy('nome')->paginate(10);
-                        } else {
-                            return redirect('/admin/produtos');
-                        }
+                        $lancs = Lancamento::where('tipo','like',"%$tipo%")->where('usuario','like',"$usuario")->paginate(100);
+                    }
+                }
+            } else {
+                if(isset($dataInicio)){
+                    if(isset($dataFim)){
+                        $lancs = Lancamento::where('tipo','like',"%$tipo%")->whereBetween('created_at',["$dataInicio"." 00:00", "$dataFim"." 23:59"])->paginate(100);
+                    } else {
+                        $lancs = Lancamento::where('tipo','like',"%$tipo%")->whereBetween('created_at',["$dataInicio"." 00:00", date("Y/m/d")])->paginate(100);
+                    }
+                } else {
+                    if(isset($dataFim)){
+                        $lancs = Lancamento::where('tipo','like',"%$tipo%")->whereBetween('created_at',["", "$dataFim"." 23:59"])->paginate(100);
+                    } else {
+                        $lancs = Lancamento::where('tipo','like',"%$tipo%")->paginate(100);
+                    }
+                }
+            }
+        } else {
+            if(isset($user)){
+                if(isset($dataInicio)){
+                    if(isset($dataFim)){
+                        $lancs = Lancamento::where('usuario','like',"$usuario")->whereBetween('created_at',["$dataInicio"." 00:00", "$dataFim"." 23:59"])->paginate(100);
+                    } else {
+                        $lancs = Lancamento::where('usuario','like',"$usuario")->whereBetween('created_at',["$dataInicio"." 00:00", date("Y/m/d")])->paginate(100);
+                    }
+                } else {
+                    if(isset($dataFim)){
+                        $lancs = Lancamento::where('usuario','like',"$usuario")->whereBetween('created_at',["", "$dataFim"." 23:59"])->paginate(100);
+                    } else {
+                        $lancs = Lancamento::where('usuario','like',"$usuario")->paginate(100);
+                    }
+                }
+            } else {
+                if(isset($dataInicio)){
+                    if(isset($dataFim)){
+                        $lancs = Lancamento::whereBetween('created_at',["$dataInicio"." 00:00", "$dataFim"." 23:59"])->paginate(100);
+                    } else {
+                        $lancs = Lancamento::whereBetween('created_at',["$dataInicio"." 00:00", date("Y/m/d")." 23:59"])->paginate(100);
+                    }
+                } else {
+                    if(isset($dataFim)){
+                        $lancs = Lancamento::whereBetween('created_at',["", "$dataFim"." 23:59"])->paginate(100);
+                    } else {
+                        return redirect('/lancamentos');
                     }
                 }
             }
         }
-        
-        $tipos = TipoAnimal::where('ativo',true)->orderBy('nome')->get();
-        $marcas = Marca::where('ativo',true)->orderBy('nome')->get();
-        $cats = Categoria::where('ativo',true)->orderBy('nome')->get();
-        return view('cadastros.produtos',compact('prods','tipos','marcas','cats'));
+        $view = "filtro";
+        $users = User::orderBy('name')->get();
+        $saldos = Saldo::where('nome','principal')->get();
+        return view('lancamentos.lancamentos',compact('view','users','lancs','saldos'));
     }
-
-
 
 }

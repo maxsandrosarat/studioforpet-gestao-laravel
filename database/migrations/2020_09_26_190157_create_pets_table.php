@@ -17,15 +17,13 @@ class CreatePetsTable extends Migration
             $table->id();
             $table->string('foto')->nullable();
             $table->string('nome');
-            $table->unsignedBigInteger('raca_id');
+            $table->foreignId('raca_id')->constrained()->cascadeOnDelete();
             $table->enum('porte',['PEQUENO','MEDIO','GRANDE']);
             $table->enum('pelo',['CURTO','MEDIANO','LONGO']);
             $table->string('cor');
             $table->enum('sexo',['MACHO','FEMEA']);
             $table->boolean('ativo')->default(true);
-            $table->unsignedBigInteger('cliente_id');
-            $table->foreign('raca_id')->references('id')->on('racas');
-            $table->foreign('cliente_id')->references('id')->on('clientes');
+            $table->foreignId('cliente_id')->constrained()->cascadeOnDelete();
             $table->timestamps();
         });
     }

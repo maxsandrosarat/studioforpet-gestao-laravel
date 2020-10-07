@@ -30,6 +30,11 @@ table thead tr th{
     bottom: 40px;
     right: 40px;
 }
+.float-button-up{
+    position: fixed;
+    bottom: 100px;
+    right: 40px;
+}
 .material-icons.blue { 
     color:#0000CD;
 }
