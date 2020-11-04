@@ -5,11 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\Categoria;
 use App\Models\Cliente;
 use App\Models\ClienteTelefone;
+use App\Models\Despesa;
 use App\Models\EntradaSaida;
 use App\Models\Historico;
 use App\Models\Lancamento;
 use App\Models\Marca;
+use App\Models\PagamentoPlano;
 use App\Models\Pet;
+use App\Models\Plano;
 use App\Models\Produto;
 use App\Models\Raca;
 use App\Models\Saldo;
@@ -19,8 +22,12 @@ use App\Models\TipoAnimal;
 use App\Models\User;
 use App\Models\VendaProduto;
 use App\Models\VendaServico;
+use DateInterval;
+use DateTime;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class UserController extends Controller
 {
@@ -41,13 +48,56 @@ class UserController extends Controller
         return view('estoque.home_estoque');
     }
 
+    public function despesas(){
+        $data = date("Y-m-d");
+        $mesAtual = date("m");
+        $ultimoDiaMes = date("t", mktime(0,0,0,$mesAtual,'01',date("Y")));
+        $totalDia = 0;
+        $totalMes = 0;
+        $totalAberto = 0;
+
+        $despsDia = Despesa::where('vencimento',"$data")->get();
+        foreach ($despsDia as $desp) {
+            if($desp->parcelado==1){
+                $totalDia += $desp->valorParcela;
+            } else {
+                $totalDia += $desp->valorTotal;
+            }
+        }
+
+        $despsMes = Despesa::whereBetween('vencimento',[date("Y")."-"."$mesAtual"."-01", date("Y")."-"."$mesAtual"."-"."$ultimoDiaMes"])->get();
+        foreach ($despsMes as $desp) {
+            if($desp->parcelado==1){
+                $totalMes += $desp->valorParcela;
+            } else {
+                $totalMes += $desp->valorTotal;
+            }
+        }
+
+        $despsAberto = Despesa::where('pago',false)->get();
+        foreach ($despsAberto as $desp) {
+            if($desp->parcelado==1){
+                $totalAberto += $desp->valorParcela;
+            } else {
+                $totalAberto += $desp->valorTotal;
+            }
+        }
+        $despesas = [
+            "despesaDia" => $totalDia,
+            "despesaMes"  => $totalMes,
+            "despesaAberto" => $totalAberto,
+        ];
+        return view('despesas.home_despesas',compact('despesas'));
+    }
+
 
     //HISTÓRICOS
     public function historicos(){
         $view = "inicial";
         $users = User::orderBy('name')->get();
+        $acoes = DB::table('historicos')->select(DB::raw("acao"))->groupBy('acao')->get();
         $hists = Historico::orderBy('created_at', 'desc')->paginate(20);
-        return view('historico.historico',compact('view','users','hists'));
+        return view('historico.historico',compact('view','users','acoes','hists'));
     }
 
     public function filtroHistoricos(Request $request)
@@ -123,7 +173,8 @@ class UserController extends Controller
         }
         $view = "filtro";
         $users = User::orderBy('name')->get();
-        return view('historico.historico',compact('view','users','hists'));
+        $acoes = DB::table('historicos')->select(DB::raw("acao"))->groupBy('acao')->get();
+        return view('historico.historico',compact('view','users','acoes','hists'));
     }
 
     //CATEGORIA
@@ -140,7 +191,9 @@ class UserController extends Controller
         $cat->save();
 
         $hist = new Historico();
-        $hist->acao = "Cadastrou Nova Categoria";
+        $hist->acao = "Cadastrou";
+        $hist->referencia = "Categoria";
+        $hist->codigo = $cat->id;
         $hist->usuario = Auth::user()->name;
         $hist->save();
         return back();
@@ -149,29 +202,50 @@ class UserController extends Controller
     public function editarCategoria(Request $request, $id)
     {
         $cat = Categoria::find($id);
-        if(isset($cat)){
-            $cat->nome = $request->input('nomeCategoria');
-            $cat->ativo = $request->input('ativo');
-            $cat->save();
-        }
+
         $hist = new Historico();
-        $hist->acao = "Alterou uma Categoria";
+        $hist->acao = "Alterou";
+        $hist->referencia = "Categoria";
+        $hist->codigo = $cat->id;
         $hist->usuario = Auth::user()->name;
         $hist->save();
+
+        if(isset($cat)){
+            $cat->nome = $request->input('nomeCategoria');
+            $cat->save();
+        }
+        
         return back();
     }
 
     public function apagarCategoria($id)
     {
         $cat = Categoria::find($id);
+
         if(isset($cat)){
-            $cat->ativo = false;
-            $cat->save();
+            if($cat->ativo==1){
+                $cat->ativo = false;
+                $cat->save();
+
+                $hist = new Historico();
+                $hist->acao = "Inativou";
+                $hist->referencia = "Categoria";
+                $hist->codigo = $cat->id;
+                $hist->usuario = Auth::user()->name;
+                $hist->save();
+            } else {
+                $cat->ativo = true;
+                $cat->save();
+
+                $hist = new Historico();
+                $hist->acao = "Ativou";
+                $hist->referencia = "Categoria";
+                $hist->codigo = $cat->id;
+                $hist->usuario = Auth::user()->name;
+                $hist->save();
+            }
         }
-        $hist = new Historico();
-        $hist->acao = "Inativou uma Categoria";
-        $hist->usuario = Auth::user()->name;
-        $hist->save();
+        
         return back();
     }
 
@@ -188,39 +262,33 @@ class UserController extends Controller
         $tipo = new TipoAnimal();
         $tipo->nome = $request->input('nome');
         $tipo->save();
+
         $hist = new Historico();
-        $hist->acao = "Cadastrou Novo Tipo de Animal";
+        $hist->acao = "Cadastrou";
+        $hist->referencia = "Tipo de Animal";
+        $hist->codigo = $tipo->id;
         $hist->usuario = Auth::user()->name;
         $hist->save();
+
         return back();
     }
 
     public function editarTipoAnimal(Request $request, $id)
     {
         $tipo = TipoAnimal::find($id);
+
+        $hist = new Historico();
+        $hist->acao = "Alterou";
+        $hist->referencia = "Tipo de Animal";
+        $hist->codigo = $tipo->id;
+        $hist->usuario = Auth::user()->name;
+        $hist->save();
+
         if(isset($tipo)){
             $tipo->nome = $request->input('nome');
-            $tipo->ativo = $request->input('ativo');
             $tipo->save();
         }
-        $hist = new Historico();
-        $hist->acao = "Alterou um Tipo de Animal";
-        $hist->usuario = Auth::user()->name;
-        $hist->save();
-        return back();
-    }
 
-    public function apagarTipoAnimal($id)
-    {
-        $tipo = TipoAnimal::find($id);
-        if(isset($tipo)){
-            $tipo->ativo = false;
-            $tipo->save();
-        }
-        $hist = new Historico();
-        $hist->acao = "Inativou um Tipo de Animal";
-        $hist->usuario = Auth::user()->name;
-        $hist->save();
         return back();
     }
 
@@ -237,39 +305,64 @@ class UserController extends Controller
         $marca = new Marca();
         $marca->nome = $request->input('nome');
         $marca->save();
+
         $hist = new Historico();
-        $hist->acao = "Cadastrou Nova Marca";
+        $hist->acao = "Cadastrou";
+        $hist->referencia = "Marca";
+        $hist->codigo = $marca->id;
         $hist->usuario = Auth::user()->name;
         $hist->save();
+
         return back();
     }
 
     public function editarMarca(Request $request, $id)
     {
         $marca = Marca::find($id);
-        if(isset($marca)){
-            $marca->nome = $request->input('nome');
-            $marca->ativo = $request->input('ativo');
-            $marca->save();
-        }
+
         $hist = new Historico();
-        $hist->acao = "Alterou uma Marca";
+        $hist->acao = "Alterou";
+        $hist->referencia = "Marca";
+        $hist->codigo = $marca->id;
         $hist->usuario = Auth::user()->name;
         $hist->save();
+
+        if(isset($marca)){
+            $marca->nome = $request->input('nome');
+            $marca->save();
+        }
+        
         return back();
     }
 
     public function apagarMarca($id)
     {
         $marca = Marca::find($id);
+
         if(isset($marca)){
-            $marca->ativo = false;
-            $marca->save();
+            if($marca->ativo==1){
+                $marca->ativo = false;
+                $marca->save();
+
+                $hist = new Historico();
+                $hist->acao = "Inativou";
+                $hist->referencia = "Marca";
+                $hist->codigo = $marca->id;
+                $hist->usuario = Auth::user()->name;
+                $hist->save();
+            } else {
+                $marca->ativo = true;
+                $marca->save();
+
+                $hist = new Historico();
+                $hist->acao = "Ativou";
+                $hist->referencia = "Marca";
+                $hist->codigo = $marca->id;
+                $hist->usuario = Auth::user()->name;
+                $hist->save();
+            }
+            
         }
-        $hist = new Historico();
-        $hist->acao = "Inativou uma Marca";
-        $hist->usuario = Auth::user()->name;
-        $hist->save();
         return back();
     }
 
@@ -279,7 +372,7 @@ class UserController extends Controller
     {
         $view = "inicial";
         $prods = Produto::paginate(20);
-        $tipos = TipoAnimal::where('ativo',true)->orderBy('nome')->get();
+        $tipos = TipoAnimal::orderBy('nome')->get();
         $marcas = Marca::where('ativo',true)->orderBy('nome')->get();
         $cats = Categoria::where('ativo',true)->orderBy('nome')->get();
         return view('cadastros.produtos',compact('view','prods','tipos','marcas','cats'));
@@ -321,7 +414,9 @@ class UserController extends Controller
         }
         $prod->save();
         $hist = new Historico();
-        $hist->acao = "Cadastrou Novo Produto";
+        $hist->acao = "Cadastrou";
+        $hist->referencia = "Produto";
+        $hist->codigo = $prod->id;
         $hist->usuario = Auth::user()->name;
         $hist->save();
         return back();
@@ -330,6 +425,14 @@ class UserController extends Controller
     public function editarProduto(Request $request, $id)
     {
         $prod = Produto::find($id);
+
+        $hist = new Historico();
+        $hist->acao = "Alterou";
+        $hist->referencia = "Produto";
+        $hist->codigo = $prod->id;
+        $hist->usuario = Auth::user()->name;
+        $hist->save();
+
         if(isset($prod)){
             if($request->file('foto')!=""){
                 Storage::disk('public')->delete($prod->foto);
@@ -365,25 +468,38 @@ class UserController extends Controller
             }
             $prod->save();
         }
-        $hist = new Historico();
-        $hist->acao = "Alterou um Produto";
-        $hist->usuario = Auth::user()->name;
-        $hist->save();
+        
         return back();
     }
 
     public function apagarProduto($id)
     {
         $prod = Produto::find($id);
+
         if(isset($prod)){
-            Storage::disk('public')->delete($prod->foto);
-            $prod->ativo = false;
-            $prod->save();
+            if($prod->ativo==1){
+                $prod->ativo = false;
+                $prod->save();
+
+                $hist = new Historico();
+                $hist->acao = "Inativou";
+                $hist->referencia = "Produto";
+                $hist->codigo = $prod->id;
+                $hist->usuario = Auth::user()->name;
+                $hist->save();
+            } else {
+                $prod->ativo = true;
+                $prod->save();
+
+                $hist = new Historico();
+                $hist->acao = "Ativou";
+                $hist->referencia = "Produto";
+                $hist->codigo = $prod->id;
+                $hist->usuario = Auth::user()->name;
+                $hist->save();
+            }
         }
-        $hist = new Historico();
-        $hist->acao = "Inativou um Produto";
-        $hist->usuario = Auth::user()->name;
-        $hist->save();
+        
         return back();
     }
 
@@ -410,7 +526,35 @@ class UserController extends Controller
                     $prods = Produto::where('nome','like',"%$nome%")->where('categoria_id',"$cat")->orderBy('nome')->paginate(100);
                 }
             } else {
-                $prods = Produto::where('nome','like',"%$nome%")->orderBy('nome')->paginate(100);
+                if(isset($tipo)){
+                    if(isset($fase)){
+                        if(isset($marca)){
+                            $prods = Produto::where('nome','like',"%$nome%")->where('tipo_animal_id',"$tipo")->where('tipo_fase',"$fase")->where('marca_id',"$marca")->orderBy('nome')->paginate(100);
+                        } else {
+                            $prods = Produto::where('nome','like',"%$nome%")->where('tipo_animal_id',"$tipo")->where('tipo_fase',"$fase")->orderBy('nome')->paginate(100); 
+                        }
+                    } else {
+                        if(isset($marca)){
+                            $prods = Produto::where('nome','like',"%$nome%")->where('tipo_animal_id',"$tipo")->where('marca_id',"$marca")->orderBy('nome')->paginate(100);
+                        } else {
+                            $prods = Produto::where('nome','like',"%$nome%")->where('tipo_animal_id',"$tipo")->orderBy('nome')->paginate(100); 
+                        }
+                    }
+                } else {
+                    if(isset($fase)){
+                        if(isset($marca)){
+                            $prods = Produto::where('nome','like',"%$nome%")->where('tipo_fase',"$fase")->where('marca_id',"$marca")->orderBy('nome')->paginate(100);
+                        } else {
+                            $prods = Produto::where('nome','like',"%$nome%")->where('tipo_fase',"$fase")->orderBy('nome')->paginate(100); 
+                        }
+                    } else {
+                        if(isset($marca)){
+                            $prods = Produto::where('nome','like',"%$nome%")->where('marca_id',"$marca")->orderBy('nome')->paginate(100);
+                        } else {
+                            $prods = Produto::where('nome','like',"%$nome%")->orderBy('nome')->paginate(100); 
+                        }
+                    }
+                }
             }
         } else {
             if(isset($cat)){
@@ -422,10 +566,26 @@ class UserController extends Controller
                             $prods = Produto::where('categoria_id',"$cat")->where('tipo_animal_id',"$tipo")->where('tipo_fase',"$fase")->orderBy('nome')->paginate(100); 
                         }
                     } else {
-                        $prods = Produto::where('categoria_id',"$cat")->where('tipo_animal_id',"$tipo")->orderBy('nome')->paginate(100);
+                        if(isset($marca)){
+                            $prods = Produto::where('categoria_id',"$cat")->where('tipo_animal_id',"$tipo")->where('marca_id',"$marca")->orderBy('nome')->paginate(100);
+                        } else {
+                            $prods = Produto::where('categoria_id',"$cat")->where('tipo_animal_id',"$tipo")->orderBy('nome')->paginate(100); 
+                        }
                     }
                 } else {
-                    $prods = Produto::where('categoria_id',"$cat")->orderBy('nome')->paginate(100);
+                    if(isset($fase)){
+                        if(isset($marca)){
+                            $prods = Produto::where('categoria_id',"$cat")->where('tipo_fase',"$fase")->where('marca_id',"$marca")->orderBy('nome')->paginate(100);
+                        } else {
+                            $prods = Produto::where('categoria_id',"$cat")->where('tipo_fase',"$fase")->orderBy('nome')->paginate(100); 
+                        }
+                    } else {
+                        if(isset($marca)){
+                            $prods = Produto::where('categoria_id',"$cat")->where('marca_id',"$marca")->orderBy('nome')->paginate(100);
+                        } else {
+                            $prods = Produto::where('categoria_id',"$cat")->orderBy('nome')->paginate(100); 
+                        }
+                    }
                 }
             } else {
                 if(isset($tipo)){
@@ -436,7 +596,11 @@ class UserController extends Controller
                             $prods = Produto::where('tipo_animal_id',"$tipo")->where('tipo_fase',"$fase")->orderBy('nome')->paginate(100); 
                         }
                     } else {
-                        $prods = Produto::where('tipo_animal_id',"$tipo")->orderBy('nome')->paginate(100);
+                        if(isset($marca)){
+                            $prods = Produto::where('tipo_animal_id',"$tipo")->where('marca_id',"$marca")->orderBy('nome')->paginate(100);
+                        } else {
+                            $prods = Produto::where('tipo_animal_id',"$tipo")->orderBy('nome')->paginate(100); 
+                        }
                     }
                 } else {
                     if(isset($fase)){
@@ -457,7 +621,7 @@ class UserController extends Controller
         }
         
         $view = "filtro";
-        $tipos = TipoAnimal::where('ativo',true)->orderBy('nome')->get();
+        $tipos = TipoAnimal::orderBy('nome')->get();
         $marcas = Marca::where('ativo',true)->orderBy('nome')->get();
         $cats = Categoria::where('ativo',true)->orderBy('nome')->get();
         return view('cadastros.produtos',compact('view','prods','tipos','marcas','cats'));
@@ -478,6 +642,14 @@ class UserController extends Controller
     public function entradaEstoque(Request $request, $id)
     {
         $prod = Produto::find($id);
+
+        $hist = new Historico();
+        $hist->acao = "Fez Entrada no Estoque";
+        $hist->referencia = "Produto";
+        $hist->codigo = $prod->id;
+        $hist->usuario = Auth::user()->name;
+        $hist->save();
+
         if(isset($prod)){
             if($request->input('qtd')!=""){
                 $user = Auth::user();
@@ -495,16 +667,21 @@ class UserController extends Controller
                 $prod->save();
             }
         }
-        $hist = new Historico();
-        $hist->acao = "Fez Entrada no Estoque";
-        $hist->usuario = Auth::user()->name;
-        $hist->save();
+        
         return back();
     }
 
     public function saidaEstoque(Request $request, $id)
     {
         $prod = Produto::find($id);
+
+        $hist = new Historico();
+        $hist->acao = "Fez Saída no Estoque";
+        $hist->referencia = "Produto";
+        $hist->codigo = $prod->id;
+        $hist->usuario = Auth::user()->name;
+        $hist->save();
+
         if(isset($prod)){
             if($request->input('qtd')!=""){
                 $user = Auth::user();
@@ -522,10 +699,7 @@ class UserController extends Controller
                 $prod->save();
             }
         }
-        $hist = new Historico();
-        $hist->acao = "Fez Saída no Estoque";
-        $hist->usuario = Auth::user()->name;
-        $hist->save();
+        
         return back();
     }
 
@@ -686,7 +860,6 @@ class UserController extends Controller
     }
 
 
-
     //CLIENTE
     public function indexClientes()
     {
@@ -725,8 +898,11 @@ class UserController extends Controller
         $cliTel->cliente_id = $cliente->id;
         $cliTel->telefone_id = $telefone->id;
         $cliTel->save();
+
         $hist = new Historico();
-        $hist->acao = "Cadastrou Novo Cliente";
+        $hist->acao = "Cadastrou";
+        $hist->referencia = "Cliente";
+        $hist->codigo = $cliente->id;
         $hist->usuario = Auth::user()->name;
         $hist->save();
         return back();
@@ -734,25 +910,29 @@ class UserController extends Controller
 
     public function editarCliente(Request $request, $id)
     {
-        $aluno = Aluno::find($id);
-        if(isset($aluno)){
-            $aluno->name =$request->input('name');
-            $aluno->email =$request->input('email');
-            if($request->input('password')!=""){
-            $aluno->password = Hash::make($request->input('password'));
-            }
-            $aluno->turma_id = $request->input('turma');
-            if($request->file('foto')!=""){
-                Storage::disk('public')->delete($aluno->foto);
-                $path = $request->file('foto')->store('fotos_perfil','public');
-                $aluno->foto = $path;
-            }
-            $aluno->save();
+        $cliente = Cliente::find($id);
+
+        if(isset($cliente)){
+            $cliente->nome = $request->input('nome');
+            $cliente->cpf = $request->input('cpf');
+            $cliente->nascimento = $request->input('nascimento');
+            $cliente->cep = $request->input('cep');
+            $cliente->rua = $request->input('rua');
+            $cliente->numero = $request->input('numero');
+            $cliente->complemento = $request->input('complemento');
+            $cliente->bairro = $request->input('bairro');
+            $cliente->cidade = $request->input('cidade');
+            $cliente->uf = $request->input('uf');
+            $cliente->save();
+
+            $hist = new Historico();
+            $hist->acao = "Alterou";
+            $hist->referencia = "Cliente";
+            $hist->codigo = $cliente->id;
+            $hist->usuario = Auth::user()->name;
+            $hist->save();
         }
-        $hist = new Historico();
-        $hist->acao = "Alterou um Cliente";
-        $hist->usuario = Auth::user()->name;
-        $hist->save();
+        
         return back();
     }
 
@@ -780,23 +960,30 @@ class UserController extends Controller
         $clienteTelefone->telefone_id = $telefone->id;
         $clienteTelefone->save();
 
+        $cliente = Cliente::find($id);
+
         $hist = new Historico();
-        $hist->acao = "Cadastrou um Telefone de Cliente";
+        $hist->acao = "Cadastrou Telefone";
+        $hist->referencia = "Cliente";
+        $hist->codigo = $cliente->id;
         $hist->usuario = Auth::user()->name;
         $hist->save();
 
         return back();
     }
 
-    public function apagarTelefone($id)
+    public function apagarTelefone($idCli, $idTel)
     {
-        $telefone = Telefone::find($id);
+        $telefone = Telefone::find($idTel);
         if(isset($telefone)){
             $telefone->ativo = false;
             $telefone->save();
         }
+
         $hist = new Historico();
-        $hist->acao = "Inativou um Telefone de Cliente";
+        $hist->acao = "Inativou Telefone";
+        $hist->referencia = "Cliente";
+        $hist->codigo = $idCli;
         $hist->usuario = Auth::user()->name;
         $hist->save();
 
@@ -819,7 +1006,9 @@ class UserController extends Controller
         $serv->save();
 
         $hist = new Historico();
-        $hist->acao = "Cadastrou Novo Serviço";
+        $hist->acao = "Cadastrou";
+        $hist->referencia = "Serviço";
+        $hist->codigo = $serv->id;
         $hist->usuario = Auth::user()->name;
         $hist->save();
 
@@ -829,32 +1018,19 @@ class UserController extends Controller
     public function editarServico(Request $request, $id)
     {
         $serv = Servico::find($id);
+
+        $hist = new Historico();
+        $hist->acao = "Alterou";
+        $hist->referencia = "Serviço";
+        $hist->codigo = $serv->id;
+        $hist->usuario = Auth::user()->name;
+        $hist->save();
+
         if(isset($serv)){
             $serv->nome = $request->input('nome');
             $serv->preco = $request->input('preco');
             $serv->save();
         }
-
-        $hist = new Historico();
-        $hist->acao = "Alterou um Serviço";
-        $hist->usuario = Auth::user()->name;
-        $hist->save();
-
-        return back();
-    }
-
-    public function apagarServico($id)
-    {
-        $serv = Servico::find($id);
-        if(isset($serv)){
-            $serv->ativo = false;
-            $serv->save();
-        }
-
-        $hist = new Historico();
-        $hist->acao = "Inativou um Serviço";
-        $hist->usuario = Auth::user()->name;
-        $hist->save();
 
         return back();
     }
@@ -879,7 +1055,9 @@ class UserController extends Controller
         $raca->save();
 
         $hist = new Historico();
-        $hist->acao = "Cadastrou Nova Raça";
+        $hist->acao = "Cadastrou";
+        $hist->referencia = "Raça";
+        $hist->codigo = $raca->id;
         $hist->usuario = Auth::user()->name;
         $hist->save();
 
@@ -889,6 +1067,14 @@ class UserController extends Controller
     public function editarRaca(Request $request, $id)
     {
         $raca = Raca::find($id);
+
+        $hist = new Historico();
+        $hist->acao = "Alterou";
+        $hist->referencia = "Raça";
+        $hist->codigo = $raca->id;
+        $hist->usuario = Auth::user()->name;
+        $hist->save();
+
         if(isset($raca)){
             if($request->file('foto')!=""){
                 Storage::disk('public')->delete($raca->foto);
@@ -900,23 +1086,207 @@ class UserController extends Controller
             $raca->save();
         }
 
+        return back();
+    }
+
+
+    //PLANOS
+    public function indexPlanos()
+    {
+        $planos = Plano::paginate(20);
+        return view('cadastros.planos',compact('planos'));
+    }
+
+    public function cadastrarPlano(Request $request)
+    {
+        $plano = new Plano();
+        $plano->nome = $request->input('nome');
+        $plano->descricao = $request->input('descricao');
+        $plano->valor = $request->input('valor');
+        $plano->save();
+
         $hist = new Historico();
-        $hist->acao = "Alterou uma Raça";
+        $hist->acao = "Cadastrou";
+        $hist->referencia = "Plano";
+        $hist->codigo = $plano->id;
         $hist->usuario = Auth::user()->name;
         $hist->save();
 
         return back();
     }
 
+    public function editarPlano(Request $request, $id)
+    {
+        $plano = Plano::find($id);
+
+        $hist = new Historico();
+        $hist->acao = "Alterou";
+        $hist->referencia = "Plano";
+        $hist->codigo = $plano->id;
+        $hist->usuario = Auth::user()->name;
+        $hist->save();
+
+        if(isset($plano)){
+            $plano->nome = $request->input('nome');
+            $plano->descricao = $request->input('descricao');
+            $plano->valor = $request->input('valor');
+            $plano->save();
+        }
+
+        return back();
+    }
+
+    public function apagarPlano($id)
+    {
+        $plano = Plano::find($id);
+
+        if(isset($plano)){
+            if($plano->ativo==1){
+                $plano->ativo = false;
+                $plano->save();
+
+                $hist = new Historico();
+                $hist->acao = "Inativou";
+                $hist->referencia = "Plano";
+                $hist->codigo = $plano->id;
+                $hist->usuario = Auth::user()->name;
+                $hist->save();
+            } else {
+                $plano->ativo = true;
+                $plano->save();
+
+                $hist = new Historico();
+                $hist->acao = "Ativou";
+                $hist->referencia = "Plano";
+                $hist->codigo = $plano->id;
+                $hist->usuario = Auth::user()->name;
+                $hist->save();
+            }
+        }
+
+        return back();
+    }
+
+
 
     //PET
     public function indexPets()
     {
         $view = "inicial";
+        $planos = Plano::where('ativo',true)->get();
         $pets = Pet::paginate(20);
         $racas = Raca::orderBy('nome')->get();
         $clientes = Cliente::orderBy('nome')->get();
-        return view('cadastros.pets',compact('view','pets','racas','clientes'));
+        return view('cadastros.pets',compact('view','planos','pets','racas','clientes'));
+    }
+
+    public function pagamentosPlano($id)
+    {
+        $pgtos = PagamentoPlano::where('pet_id',"$id")->paginate(12);
+        $pet = Pet::find("$id");
+        return view('cadastros.pagamentos_plano',compact('pgtos','pet'));
+    }
+
+    public function pagarPlano(Request $request, $id)
+    {
+        $pgto = new PagamentoPlano();
+        $pgto->pet_id = $id;
+        $pgto->plano_id = $request->input('plano');
+        $pgto->valorPago = $request->input('valor');
+        $pgto->save();
+
+        $vendaServ = new VendaServico();
+        if($request->input('valor')!=""){
+            $vendaServ->valor = $request->input('valor');
+        }
+        if($request->input('observacao')!=""){
+            $vendaServ->observacao = $request->input('observacao');
+        }
+        if($request->input('formaPagamento')!=""){
+            $vendaServ->forma_pagamento = $request->input('formaPagamento');
+        }
+        $vendaServ->servico_id = 1;
+        $vendaServ->pet_id = $id;
+        $vendaServ->save();
+
+        $pet = Pet::find($id);
+        $lanc = new Lancamento();
+        $lanc->tipo = "deposito";
+        $lanc->valor = $request->input('valor');
+        $lanc->usuario = Auth::user()->name;
+        $lanc->motivo = "Pagamento Plano Pet: ".$pet->nome;
+        $lanc->save();
+
+        $saldo = Saldo::find(1);
+        $saldo->saldo += $request->input('valor');
+        $saldo->save();
+
+        $hist = new Historico();
+        $hist->acao = "Recebeu Pagamento Plano";
+        $hist->referencia = "Pet";
+        $hist->codigo = $pet->id;
+        $hist->usuario = Auth::user()->name;
+        $hist->save();
+
+        return back();
+    }
+
+    public function trocarPlano(Request $request, $id)
+    {
+        $pet = Pet::find($id);
+        $pet->plano_id = $request->input('planoId');
+        $pet->valorPlano = $request->input('valorPlano');
+        $pet->save();
+
+        $hist = new Historico();
+        $hist->acao = "Mudou o Plano";
+        $hist->referencia = "Pet";
+        $hist->codigo = $pet->id;
+        $hist->usuario = Auth::user()->name;
+        $hist->save();
+
+        return back();
+    }
+
+    public function reativarPlano(Request $request, $id)
+    {
+        $pet = Pet::find($id);
+        $pet->temPlano = true;
+        $pet->plano_id = $request->input('planoId');
+        $pet->valorPlano = $request->input('valorPlano');
+        $pet->planoCancelado = false;
+        $pet->save();
+
+        $hist = new Historico();
+        $hist->acao = "Reativou o Plano";
+        $hist->referencia = "Pet";
+        $hist->codigo = $pet->id;
+        $hist->usuario = Auth::user()->name;
+        $hist->save();
+
+        return back();
+    }
+
+    public function cancelarPlano($id)
+    {
+        $pet = Pet::find($id);
+
+        if(isset($pet)){
+            $pet->temPlano = false;
+            $pet->plano_id = NULL;
+            $pet->valorPlano = 0;
+            $pet->planoCancelado = true;
+            $pet->save();
+
+            $hist = new Historico();
+            $hist->acao = "Cancelou Plano";
+            $hist->referencia = "Pet";
+            $hist->codigo = $pet->id;
+            $hist->usuario = Auth::user()->name;
+            $hist->save();
+        }
+
+        return back();
     }
 
     public function cadastrarPet(Request $request)
@@ -944,16 +1314,24 @@ class UserController extends Controller
         if($request->input('sexo')!=""){
             $pet->sexo = $request->input('sexo');
         }
-        if($request->input('ativo')!=""){
-            $pet->ativo = $request->input('ativo');
-        }
         if($request->input('cliente')!=""){
             $pet->cliente_id = $request->input('cliente');
+        }
+        if($request->input('plano')==1){
+            $pet->temPlano = $request->input('plano');
+            if($request->input('planoId')!=""){
+                $pet->plano_id = $request->input('planoId');
+            }
+            if($request->input('valorPlano')!=""){
+                $pet->valorPlano = $request->input('valorPlano');
+            }
         }
         $pet->save();
 
         $hist = new Historico();
-        $hist->acao = "Cadastrou Novo Pet";
+        $hist->acao = "Cadastrou";
+        $hist->referencia = "Pet";
+        $hist->codigo = $pet->id;
         $hist->usuario = Auth::user()->name;
         $hist->save();
 
@@ -963,6 +1341,14 @@ class UserController extends Controller
     public function editarPet(Request $request, $id)
     {
         $pet = Pet::find($id);
+
+        $hist = new Historico();
+        $hist->acao = "Alterou";
+        $hist->referencia = "Pet";
+        $hist->codigo = $pet->id;
+        $hist->usuario = Auth::user()->name;
+        $hist->save();
+
         if(isset($pet)){
             if($request->file('foto')!=""){
                 Storage::disk('public')->delete($pet->foto);
@@ -987,19 +1373,24 @@ class UserController extends Controller
             if($request->input('sexo')!=""){
                 $pet->sexo = $request->input('sexo');
             }
-            if($request->input('ativo')!=""){
-                $pet->ativo = $request->input('ativo');
-            }
             if($request->input('cliente')!=""){
                 $pet->cliente_id = $request->input('cliente');
             }
+            if($request->input('plano')==1){
+                $pet->temPlano = $request->input('plano');
+                if($request->input('planoId')!=""){
+                    $pet->plano_id = $request->input('planoId');
+                }
+                if($request->input('valorPlano')!=""){
+                    $pet->valorPlano = $request->input('valorPlano');
+                }
+            } else {
+                $pet->plano = 0;
+                $pet->plano_id = NULL;
+                $pet->valorPlano = 0;
+            }
             $pet->save();
         }
-
-        $hist = new Historico();
-        $hist->acao = "Alterou um Pet";
-        $hist->usuario = Auth::user()->name;
-        $hist->save();
 
         return back();
     }
@@ -1007,16 +1398,19 @@ class UserController extends Controller
     public function apagarPet($id)
     {
         $pet = Pet::find($id);
+
+        $hist = new Historico();
+        $hist->acao = "Inativou";
+        $hist->referencia = "Pet";
+        $hist->codigo = $pet->id;
+        $hist->usuario = Auth::user()->name;
+        $hist->save();
+
         if(isset($pet)){
             Storage::disk('public')->delete($pet->foto);
             $pet->ativo = false;
             $pet->save();
         }
-
-        $hist = new Historico();
-        $hist->acao = "Inativou um Pet";
-        $hist->usuario = Auth::user()->name;
-        $hist->save();
 
         return back();
     }
@@ -1056,9 +1450,10 @@ class UserController extends Controller
             }
         }
         $view = "filtro";
+        $planos = Plano::where('ativo',true)->get();
         $racas = Raca::orderBy('nome')->get();
         $clientes = Cliente::orderBy('nome')->get();
-        return view('cadastros.pets',compact('view','pets','racas','clientes'));
+        return view('cadastros.pets',compact('view','planos','pets','racas','clientes'));
     }
 
 
@@ -1106,7 +1501,9 @@ class UserController extends Controller
         $saldo->save();
 
         $hist = new Historico();
-        $hist->acao = "Cadastrou Nova Venda de Serviço";
+        $hist->acao = "Cadastrou";
+        $hist->referencia = "Venda Serviço";
+        $hist->codigo = $vendaServ->id;
         $hist->usuario = Auth::user()->name;
         $hist->save();
 
@@ -1116,17 +1513,26 @@ class UserController extends Controller
     public function apagarVendaServico($id)
     {
         $vendaServ = VendaServico::find($id);
+
+        $hist = new Historico();
+        $hist->acao = "Excluiu";
+        $hist->referencia = "Venda Serviço";
+        $hist->codigo = $vendaServ->id;
+        $hist->usuario = Auth::user()->name;
+        $hist->save();
+
+        $lanc = new Lancamento();
+        $lanc->tipo = "retirada";
+        $lanc->valor = $vendaServ->valor - $vendaServ->desconto;
+        $lanc->usuario = Auth::user()->name;
+        $lanc->motivo = "Cancelamento Venda Serviço";
+        $lanc->save();
         if(isset($vendaServ)){
             $saldo = Saldo::find(1);
             $saldo->saldo -= $vendaServ->valor - $vendaServ->desconto;
             $saldo->save();
             $vendaServ->delete();
         }
-
-        $hist = new Historico();
-        $hist->acao = "Apagou uma Venda de Serviço";
-        $hist->usuario = Auth::user()->name;
-        $hist->save();
 
         return back();
     }
@@ -1229,7 +1635,9 @@ class UserController extends Controller
         $saldo->save();
 
         $hist = new Historico();
-        $hist->acao = "Cadastrou Nova Venda de Produto";
+        $hist->acao = "Cadastrou";
+        $hist->referencia = "Venda Produto";
+        $hist->codigo = $vendaProd->id;
         $hist->usuario = Auth::user()->name;
         $hist->save();
 
@@ -1239,17 +1647,26 @@ class UserController extends Controller
     public function apagarVendaProduto($id)
     {
         $vendaProd = VendaProduto::find($id);
+
+        $hist = new Historico();
+        $hist->acao = "Excluiu";
+        $hist->referencia = "Venda Produto";
+        $hist->codigo = $vendaProd->id;
+        $hist->usuario = Auth::user()->name;
+        $hist->save();
+
+        $lanc = new Lancamento();
+        $lanc->tipo = "retirada";
+        $lanc->valor = $vendaProd->valor - $vendaProd->desconto;
+        $lanc->usuario = Auth::user()->name;
+        $lanc->motivo = "Cancelamento Venda Produto";
+        $lanc->save();
         if(isset($vendaProd)){
             $saldo = Saldo::find(1);
             $saldo->saldo -= $vendaProd->valor - $vendaProd->desconto;
             $saldo->save();
             $vendaProd->delete();
         }
-
-        $hist = new Historico();
-        $hist->acao = "Apagou uma Venda de Produto";
-        $hist->usuario = Auth::user()->name;
-        $hist->save();
 
         return back();
     }
@@ -1319,7 +1736,9 @@ class UserController extends Controller
         $saldo->save();
 
         $hist = new Historico();
-        $hist->acao = "Fez um Depósito";
+        $hist->acao = "Fez Depósito";
+        $hist->referencia = "Lançamento";
+        $hist->codigo = $lanc->id;
         $hist->usuario = Auth::user()->name;
         $hist->save();
 
@@ -1341,6 +1760,8 @@ class UserController extends Controller
 
         $hist = new Historico();
         $hist->acao = "Fez uma Retirada";
+        $hist->referencia = "Lançamento";
+        $hist->codigo = $lanc->id;
         $hist->usuario = Auth::user()->name;
         $hist->save();
 
@@ -1424,4 +1845,264 @@ class UserController extends Controller
         return view('lancamentos.lancamentos',compact('view','users','lancs','saldos'));
     }
 
+
+    //DESPESAS  
+    public function indexDespesas()
+    {
+        $valorTotal = 0;
+        $view = "inicial";
+        $despesas = Despesa::orderBy('vencimento')->paginate(20);
+        foreach ($despesas as $desp) {
+            if($desp->parcelado==1){
+                $valorTotal += $desp->valorParcela;
+            } else {
+                $valorTotal += $desp->valorTotal;
+            }
+        }
+        return view('despesas.lancamentos',compact('view','valorTotal','despesas'));
+    }
+
+    public function indexDespesasDia()
+    {
+        $valorTotal = 0;
+        $view = "filtro";
+        $data = date("Y-m-d");
+        $despesas = Despesa::where('vencimento',"$data")->orderBy('vencimento')->paginate(50);
+        foreach ($despesas as $desp) {
+            if($desp->parcelado==1){
+                $valorTotal += $desp->valorParcela;
+            } else {
+                $valorTotal += $desp->valorTotal;
+            }
+        }
+        return view('despesas.lancamentos',compact('view','valorTotal','despesas'));
+    }
+
+    public function indexDespesasMes()
+    {
+        $valorTotal = 0;
+        $view = "filtro";
+        $mesAtual = date("m");
+        $ultimoDiaMes = date("t", mktime(0,0,0,$mesAtual,'01',date("Y")));
+        $despesas = Despesa::whereBetween('vencimento',[date("Y")."-"."$mesAtual"."-01", date("Y")."-"."$mesAtual"."-"."$ultimoDiaMes"])->paginate(50);
+        foreach ($despesas as $desp) {
+            if($desp->parcelado==1){
+                $valorTotal += $desp->valorParcela;
+            } else {
+                $valorTotal += $desp->valorTotal;
+            }
+        }
+        return view('despesas.lancamentos',compact('view','valorTotal','despesas'));
+    }
+
+    public function cadastrarDespesa(Request $request)
+    {
+        if($request->input('parcelado') == 1){
+            for($i=1; $i<=$request->input('qtdParcelas'); $i++){
+                $desp = new Despesa();
+                $desp->descricao = $request->input('descricao')." - ".$i."/".$request->input('qtdParcelas');
+                $dias = ($i * 30) - 30;
+                $data = $request->input('vencimento');
+                $desp->vencimento = date('Y-m-d', strtotime($data. ' + '.$dias.' days'));
+                $desp->valorTotal = $request->input('valorTotal');
+                $desp->formaPagamento = $request->input('formaPagamento');
+                $desp->observacao = $request->input('observacao');
+                $desp->parcelado = $request->input('parcelado');
+                $desp->qtdParcelas = $request->input('qtdParcelas');
+                $desp->valorParcela = $request->input('valorParcela');
+                $desp->usuario = Auth::user()->name;
+                $desp->save();
+
+                $hist = new Historico();
+                $hist->acao = "Cadastrou";
+                $hist->referencia = "Despesa";
+                $hist->codigo = $desp->id;
+                $hist->usuario = Auth::user()->name;
+                $hist->save();
+            }
+        } else {
+            $desp = new Despesa();
+            $desp->descricao = $request->input('descricao');
+            $desp->vencimento = $request->input('vencimento');
+            $desp->valorTotal = $request->input('valorTotal');
+            $desp->formaPagamento = $request->input('formaPagamento');
+            $desp->observacao = $request->input('observacao');
+            $desp->parcelado = $request->input('parcelado');
+            $desp->usuario = Auth::user()->name;
+            $desp->save();
+
+            $hist = new Historico();
+            $hist->acao = "Cadastrou";
+            $hist->referencia = "Despesa";
+            $hist->codigo = $desp->id;
+            $hist->usuario = Auth::user()->name;
+            $hist->save();
+        }
+
+        return back();
+    }
+
+    public function pagarDespesa(Request $request, $id)
+    {
+        $desp = Despesa::find($id);
+
+        $hist = new Historico();
+        $hist->acao = "Pagou";
+        $hist->referencia = "Despesa";
+        $hist->codigo = $desp->id;
+        $hist->usuario = Auth::user()->name;
+        $hist->save();
+
+        if(isset($desp)){
+            $desp->pago = 1;
+            $desp->pagamento = $request->input('pagamento');
+            $desp->save();
+        }
+
+        if($request->input('saldo')==1){
+            $lanc = new Lancamento();
+            $lanc->tipo = "retirada";
+            $valor = 0;
+            if($desp->parcelado==1){
+                $valor = $desp->valorParcela;
+            } else {
+                $valor = $desp->valorTotal;
+            }
+            $lanc->valor = $valor;
+            $lanc->usuario = Auth::user()->name;
+            $lanc->motivo = "Pagamento de Despesa";
+            $lanc->save();
+            $saldo = Saldo::find(1);
+            $saldo->saldo -= $valor;
+            $saldo->save();
+        } else {
+            $hist = new Historico();
+            $hist->acao = "Pagou sem usar o Saldo";
+            $hist->referencia = "Despesa";
+            $hist->codigo = $desp->id;
+            $hist->usuario = Auth::user()->name;
+            $hist->save();
+        }
+
+        return back();
+    }
+
+    public function editarDespesa(Request $request, $id)
+    {
+        $desp = Despesa::find($id);
+
+        $hist = new Historico();
+        $hist->acao = "Alterou";
+        $hist->referencia = "Despesa";
+        $hist->codigo = $desp->id;
+        $hist->usuario = Auth::user()->name;
+        $hist->save();
+
+        if(isset($desp)){
+            $desp->descricao = $request->input('descricao');
+            $desp->vencimento = $request->input('vencimento');
+            $desp->formaPagamento = $request->input('formaPagamento');
+            $desp->observacao = $request->input('observacao');
+            $desp->save();
+        }
+
+        return back();
+    }
+
+    public function apagarDespesa($id)
+    {
+        $desp = Despesa::find($id);
+
+        $hist = new Historico();
+        $hist->acao = "Excluiu";
+        $hist->referencia = "Despesa";
+        $hist->codigo = $desp->id;
+        $hist->usuario = Auth::user()->name;
+        $hist->save();
+
+        if(isset($desp)){
+            $desp->delete();
+        }
+
+        return back();
+    }
+
+    public function filtroDespesa(Request $request)
+    {
+        $codigo = $request->input('codigo');
+        $descricao = $request->input('descricao');
+        $dataInicio = $request->input('dataInicio');
+        $dataFim = $request->input('dataFim');
+        if(isset($codigo)){
+            if(isset($descricao)){
+                if(isset($dataInicio)){
+                    if(isset($dataFim)){
+                        $despesas = Despesa::where('id',"$codigo")->where('descricao','like',"%$descricao%")->whereBetween('vencimento',["$dataInicio", "$dataFim"])->orderBy('vencimento')->paginate(100);
+                    } else {
+                        $despesas = Despesa::where('id',"$codigo")->where('descricao','like',"%$descricao%")->whereBetween('vencimento',["$dataInicio", date("Y/m/d")])->orderBy('vencimento')->paginate(100);
+                    }
+                } else {
+                    if(isset($dataFim)){
+                        $despesas = Despesa::where('id',"$codigo")->where('descricao','like',"%$descricao%")->whereBetween('vencimento',["", "$dataFim"])->orderBy('vencimento')->paginate(100);
+                    } else {
+                        $despesas = Despesa::where('id',"$codigo")->where('descricao','like',"%$descricao%")->orderBy('vencimento')->paginate(100);
+                    }
+                }
+            } else {
+                if(isset($dataInicio)){
+                    if(isset($dataFim)){
+                        $despesas = Despesa::where('id',"$codigo")->whereBetween('vencimento',["$dataInicio", "$dataFim"])->orderBy('vencimento')->paginate(100);
+                    } else {
+                        $despesas = Despesa::where('id',"$codigo")->whereBetween('vencimento',["$dataInicio", date("Y/m/d")])->orderBy('vencimento')->paginate(100);
+                    }
+                } else {
+                    if(isset($dataFim)){
+                        $despesas = Despesa::where('id',"$codigo")->whereBetween('vencimento',["", "$dataFim"])->orderBy('vencimento')->paginate(100);
+                    } else {
+                        $despesas = Despesa::where('id',"$codigo")->orderBy('vencimento')->paginate(100);
+                    }
+                }
+            }
+        } else {
+            if(isset($descricao)){
+                if(isset($dataInicio)){
+                    if(isset($dataFim)){
+                        $despesas = Despesa::where('descricao','like',"%$descricao%")->whereBetween('vencimento',["$dataInicio", "$dataFim"])->orderBy('vencimento')->paginate(100);
+                    } else {
+                        $despesas = Despesa::where('descricao','like',"%$descricao%")->whereBetween('vencimento',["$dataInicio", date("Y/m/d")])->orderBy('vencimento')->paginate(100);
+                    }
+                } else {
+                    if(isset($dataFim)){
+                        $despesas = Despesa::where('descricao','like',"%$descricao%")->whereBetween('vencimento',["", "$dataFim"])->orderBy('vencimento')->paginate(100);
+                    } else {
+                        $despesas = Despesa::where('descricao','like',"%$descricao%")->orderBy('vencimento')->paginate(100);
+                    }
+                }
+            } else {
+                if(isset($dataInicio)){
+                    if(isset($dataFim)){
+                        $despesas = Despesa::whereBetween('vencimento',["$dataInicio", "$dataFim"])->orderBy('vencimento')->paginate(100);
+                    } else {
+                        $despesas = Despesa::whereBetween('vencimento',["$dataInicio", date("Y/m/d")])->orderBy('vencimento')->paginate(100);
+                    }
+                } else {
+                    if(isset($dataFim)){
+                        $despesas = Despesa::whereBetween('vencimento',["", "$dataFim"])->orderBy('vencimento')->paginate(100);
+                    } else {
+                        return redirect('/despesas/lancamentos');
+                    }
+                }
+            }
+        }
+        $valorTotal = 0;
+        foreach ($despesas as $desp) {
+            if($desp->parcelado==1){
+                $valorTotal += $desp->valorParcela;
+            } else {
+                $valorTotal += $desp->valorTotal;
+            }
+        }
+        $view = "filtro";
+        return view('despesas.lancamentos',compact('view','valorTotal','despesas'));
+    }
 }

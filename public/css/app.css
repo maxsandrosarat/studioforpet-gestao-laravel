@@ -60,3 +60,32 @@ table thead tr th{
 .centralizado {
     margin: 5px;
 }
+
+#my-div{
+    -webkit-box-shadow: 9px 7px 5px rgba(50, 50, 50, 0.77);
+	-moz-box-shadow:    9px 7px 5px rgba(50, 50, 50, 0.77);
+	box-shadow:         9px 7px 5px rgba(50, 50, 50, 0.77);
+}
+
+#my-div:hover {
+	background: lightgrey; 
+}
+    
+a.fill-div {
+    text-decoration: none;
+    display: block;
+    height: 100%;
+    width: 100%;
+}
+
+.bd-callout{padding:0 0 0 0.8rem;margin-top:0.5rem;margin-bottom:0;border:1px solid #eee;border-left-width:.25rem;border-radius:.25rem}
+.bd-callout p:last-child{margin-bottom:0}
+.bd-callout-info{border-left-color:#5bc0de}
+.bd-callout-info h4{color:#5bc0de}
+.bd-callout-success{border-left-color:	#32CD32}
+.bd-callout-success h4{color: 	#32CD32}
+.bd-callout-warning{border-left-color:#f0ad4e}
+.bd-callout-warning h4{color:#f0ad4e}
+.bd-callout-danger{border-left-color:#d9534f}
+.bd-callout-danger h4{color:#d9534f}
+

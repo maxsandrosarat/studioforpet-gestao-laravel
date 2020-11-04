@@ -42,7 +42,8 @@
                     <tr>
                         <th>Código</th>
                         <th>Nome</th>
-                        <th>Ativo</th>
+                        <th>Criação</th>
+                        <th>Última Atualização</th>
                         <th>Ações</th>
                     </tr>
                 </thead>
@@ -51,9 +52,10 @@
                     <tr>
                         <td style="text-align: center;">{{$tipo->id}}</td>
                         <td style="text-align: center;">{{$tipo->nome}}</td>
-                        <td>@if($tipo->ativo=='1') Sim @else Não @endif</td>
+                        <td>{{ $tipo->created_at->format('d/m/Y H:i') }}</td>
+                        <td>{{ $tipo->updated_at->format('d/m/Y H:i') }}</td>
                         <td style="text-align: center;">
-                            <button type="button" class="btn btn-sm btn-warning" data-toggle="modal" data-target="#exampleModal{{$tipo->id}}" data-toggle="tooltip" data-placement="left" title="Editar">
+                            <button type="button" class="btn btn-warning btn-sm" data-toggle="modal" data-target="#exampleModal{{$tipo->id}}" data-toggle="tooltip" data-placement="left" title="Editar">
                                 <i class="material-icons md-48">edit</i>
                             </button>
                             
@@ -72,12 +74,6 @@
                                             <div class="form-group">
                                                 <label for="nome">Nome do Tipo</label>
                                                 <input type="text" class="form-control" name="nome" id="nome" value="{{$tipo->nome}}" required>
-                                                <br/>
-                                                <h5>Ativo?</h5>
-                                                <input type="radio" id="sim" name="ativo" value="1" @if($tipo->ativo=="1") checked @endif required>
-                                                <label for="sim">Sim</label>
-                                                <input type="radio" id="nao" name="ativo" value="0" @if($tipo->ativo=="0") checked @endif required>
-                                                <label for="nao">Não</label>
                                             </div>
                                     </div>
                                     <div class="modal-footer">
@@ -87,7 +83,6 @@
                                 </div>
                                 </div>
                             </div>
-                            <a href="/tiposAnimais/apagar/{{$tipo->id}}" class="btn btn-sm btn-danger" data-toggle="tooltip" data-placement="right" title="Excluir"><i class="material-icons md-48">delete</i></a>
                         </td>
                     </tr>
                     @endforeach

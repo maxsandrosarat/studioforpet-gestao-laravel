@@ -19,11 +19,15 @@ class CreatePetsTable extends Migration
             $table->string('nome');
             $table->foreignId('raca_id')->constrained()->cascadeOnDelete();
             $table->enum('porte',['PEQUENO','MEDIO','GRANDE']);
-            $table->enum('pelo',['CURTO','MEDIANO','LONGO']);
+            $table->enum('pelo',['CURTO','MEDIANO','LONGO','TOSADO']);
             $table->string('cor');
             $table->enum('sexo',['MACHO','FEMEA']);
-            $table->boolean('ativo')->default(true);
             $table->foreignId('cliente_id')->constrained()->cascadeOnDelete();
+            $table->boolean('temPlano')->default(false);
+            $table->unsignedBigInteger('plano_id')->nullable();//NÃO OBRIGATÓRIO, USAR DESSA FORMA
+            $table->foreign('plano_id')->references('id')->on('planos');
+            $table->float('valorPlano')->default(0);
+            $table->boolean('planoCancelado')->default(false);
             $table->timestamps();
         });
     }

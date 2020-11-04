@@ -2,7 +2,7 @@
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarTogglerDemo01" aria-controls="navbarTogglerDemo01" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
-    <img src="/storage/brasao.png" alt="logo_liceu" width="100" class="d-inline-block align-top" loading="lazy">
+    <img src="/storage/brasao.png" alt="logo_forpet" width="100" class="d-inline-block align-top" loading="lazy">
     <div class="collapse navbar-collapse" id="navbarTogglerDemo01">
         <ul class="navbar-nav mr-auto">
             @auth("web")
@@ -20,6 +20,9 @@
             </li>
             <li @if($current=="estoque") class="nav-item active" @else class="nav-item" @endif>
                 <a class="nav-link" href="/estoque">Estoque</a>
+            </li>
+            <li @if($current=="despesas") class="nav-item active" @else class="nav-item" @endif>
+                <a class="nav-link" href="/despesas">Despesas</a>
             </li>
             <li @if($current=="historicos") class="nav-item active" @else class="nav-item" @endif>
                 <a class="nav-link" href="/historicos">Históricos</a>

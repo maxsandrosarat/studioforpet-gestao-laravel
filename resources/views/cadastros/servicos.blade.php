@@ -23,7 +23,7 @@
                                 <label for="nome">Nome do Serviço</label>
                                 <input type="text" class="form-control" name="nome" id="nome" placeholder="Digite o nome do Serviço" required>
                                 <label for="preco">Preço do Serviço</label>
-                                <input type="text" class="form-control" name="preco" id="preco" placeholder="Exemplo: 10.5" required>
+                                <input type="text" class="form-control" name="preco" id="preco" placeholder="Exemplo: 10.5" onblur="getValor('preco')" required>
                             </div>
                     </div>
                     <div class="modal-footer">
@@ -45,6 +45,8 @@
                         <th>Código</th>
                         <th>Nome</th>
                         <th>Preço</th>
+                        <th>Criação</th>
+                        <th>Última Atualização</th>
                         <th>Ações</th>
                     </tr>
                 </thead>
@@ -54,8 +56,10 @@
                         <td style="text-align: center;">{{$serv->id}}</td>
                         <td style="text-align: center;">{{$serv->nome}}</td>
                         <td>{{ 'R$ '.number_format($serv->preco, 2, ',', '.')}}</td>
+                        <td>{{ $serv->created_at->format('d/m/Y H:i') }}</td>
+                        <td>{{ $serv->updated_at->format('d/m/Y H:i') }}</td>
                         <td style="text-align: center;">
-                            <button type="button" class="btn btn-sm btn-warning" data-toggle="modal" data-target="#exampleModal{{$serv->id}}" data-toggle="tooltip" data-placement="left" title="Editar">
+                            <button type="button" class="btn btn-warning btn-sm" data-toggle="modal" data-target="#exampleModal{{$serv->id}}" data-toggle="tooltip" data-placement="left" title="Editar">
                                 <i class="material-icons md-48">edit</i>
                             </button>
                             
@@ -75,7 +79,7 @@
                                                 <label for="nome">Nome do Serviço</label>
                                                 <input type="text" class="form-control" name="nome" id="nome" value="{{$serv->nome}}" required>
                                                 <label for="preco">Preço do Serviço</label>
-                                                <input type="text" class="form-control" name="preco" id="preco" value="{{$serv->preco}}" required>
+                                                <input type="text" class="form-control" name="preco" id="precoE" value="{{$serv->preco}}" onblur="getValor('precoE')" required>
                                             </div>
                                     </div>
                                     <div class="modal-footer">
@@ -85,7 +89,6 @@
                                 </div>
                                 </div>
                             </div>
-                            <a href="/servicos/apagar/{{$serv->id}}" class="btn btn-sm btn-danger" data-toggle="tooltip" data-placement="right" title="Excluir"><i class="material-icons md-48">delete</i></a>
                         </td>
                     </tr>
                     @endforeach

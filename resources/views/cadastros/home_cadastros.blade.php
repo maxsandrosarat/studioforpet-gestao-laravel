@@ -6,7 +6,7 @@
         <div class="col align-self-center">
             <div class="card-deck">
                 <div class="d-flex justify-content-center centralizado">
-                    <div class="card border-primary text-center" style="width: 255px;">
+                    <div class="card border-primary text-center" style="width: 300px;">
                         <div class="card-body">
                             <h5>Clientes</h5>
                             <p class="card-text">
@@ -17,7 +17,7 @@
                     </div>
                 </div>
                 <div class="d-flex justify-content-center centralizado">
-                    <div class="card border-primary text-center" style="width: 255px;">
+                    <div class="card border-primary text-center" style="width: 300px;">
                         <div class="card-body">
                             <h5>Pets</h5>
                             <p class="card-text">
@@ -28,7 +28,7 @@
                     </div>
                 </div>
                 <div class="d-flex justify-content-center centralizado">
-                    <div class="card border-primary text-center" style="width: 255px;">
+                    <div class="card border-primary text-center" style="width: 300px;">
                         <div class="card-body">
                             <h5>Serviços</h5>
                             <p class="card-text">
@@ -39,7 +39,7 @@
                     </div>
                 </div>
                 <div class="d-flex justify-content-center centralizado">
-                    <div class="card border-primary text-center" style="width: 255px;">
+                    <div class="card border-primary text-center" style="width: 300px;">
                         <div class="card-body">
                             <h5>Produtos</h5>
                             <p class="card-text">
@@ -50,7 +50,18 @@
                     </div>
                 </div>
                 <div class="d-flex justify-content-center centralizado">
-                    <div class="card border-primary text-center" style="width: 255px;">
+                    <div class="card border-primary text-center" style="width: 300px;">
+                        <div class="card-body">
+                            <h5>Planos</h5>
+                            <p class="card-text">
+                                Gerencie seus Planos!
+                            </p>
+                            <a href="/planos" class="btn btn-primary">Gerenciar</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-center centralizado">
+                    <div class="card border-primary text-center" style="width: 300px;">
                         <div class="card-body">
                             <h5>Categorias</h5>
                             <p class="card-text">
@@ -61,7 +72,7 @@
                     </div>
                 </div>
                 <div class="d-flex justify-content-center centralizado">
-                    <div class="card border-primary text-center" style="width: 255px;">
+                    <div class="card border-primary text-center" style="width: 300px;">
                         <div class="card-body">
                             <h5>Marcas</h5>
                             <p class="card-text">
@@ -72,7 +83,7 @@
                     </div>
                 </div>
                 <div class="d-flex justify-content-center centralizado">
-                    <div class="card border-primary text-center" style="width: 255px;">
+                    <div class="card border-primary text-center" style="width: 300px;">
                         <div class="card-body">
                             <h5>Tipos de Animais</h5>
                             <p class="card-text">
@@ -83,7 +94,7 @@
                     </div>
                 </div>
                 <div class="d-flex justify-content-center centralizado">
-                    <div class="card border-primary text-center" style="width: 255px;">
+                    <div class="card border-primary text-center" style="width: 300px;">
                         <div class="card-body">
                             <h5>Raças</h5>
                             <p class="card-text">

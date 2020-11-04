@@ -17,6 +17,8 @@ class CreateHistoricosTable extends Migration
             $table->id();
             $table->string('usuario');
             $table->string('acao');
+            $table->string('referencia');
+            $table->integer('codigo');
             $table->timestamps();
         });
     }

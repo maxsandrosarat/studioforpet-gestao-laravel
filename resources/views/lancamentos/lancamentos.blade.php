@@ -4,10 +4,14 @@
     <div class="card border">
         <div class="card-body">
             <h5 class="card-title">Lançamentos</h5>
+            <hr/>
             @foreach ($saldos as $saldo)
-                        Saldo Principal: R$ {{ number_format($saldo->saldo, 2, ',', '.') }} <br/>
-                        Última atualização: {{ $saldo->updated_at->format('d/m/Y H:i') }}
+                <p class="font-weight-bolder">
+                    Saldo Principal: R$ {{ number_format($saldo->saldo, 2, ',', '.') }} <br/>
+                    Última atualização: {{ $saldo->updated_at->format('d/m/Y H:i') }}
+                </p>
             @endforeach
+            <hr/>
             <a type="button" class="float-button" data-toggle="modal" data-target="#exampleModalDep" data-toggle="tooltip" data-placement="bottom" title="Fazer Deposito">
                 <i class="material-icons green md-60">add_circle</i>
             </a>
@@ -104,7 +108,7 @@
                     @csrf
                     <div class="form-group">
                         <label for="valor">Valor</label>
-                        <input type="text" class="form-control" name="valor" id="valor" placeholder="Exemplo: 35.5" required>
+                        <input type="text" class="form-control" name="valor" id="valorDep" placeholder="Exemplo: 35.5" onblur="getValor('valorDep')" required>
                         <br/>
                         <h5>Motivo</h5>
                         <br/>
@@ -135,7 +139,7 @@
                         @csrf
                         <div class="form-group">
                             <label for="valor">Valor</label>
-                            <input type="text" class="form-control" name="valor" id="valor" placeholder="Exemplo: 35.5" required>
+                            <input type="text" class="form-control" name="valor" id="valorRet" placeholder="Exemplo: 35.5" onblur="getValor('valorRet')" required>
                             <br/>
                             <h5>Motivo</h5>
                             <br/>

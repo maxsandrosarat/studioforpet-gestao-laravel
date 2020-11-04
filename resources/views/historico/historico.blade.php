@@ -26,6 +26,11 @@
                                 <option value="{{$user->id}}">{{$user->name}}</option>
                             @endforeach
                         </select>
+                        <select class="custom-select" id="acao" name="acao">
+                            @foreach ($acoes as $acao)
+                            <option value="{{$acao->acao}}">{{$acao->acao}}</option>
+                            @endforeach
+                        </select>
                         <label for="dataInicio">Data Início
                         <input class="form-control" type="date" name="dataInicio"></label>
                         <label for="dataFim">Data Fim
@@ -45,6 +50,8 @@
                         <th>Código</th>
                         <th>Usuário</th>
                         <th>Ação</th>
+                        <th>Referência</th>
+                        <th>Código da Referência</th>
                         <th>Data & Hora</th>
                     </tr>
                 </thead>
@@ -54,6 +61,8 @@
                         <td style="text-align: center;">{{$hist->id}}</td>
                         <td style="text-align: center;">{{$hist->usuario}}</td>
                         <td style="text-align: center;">{{$hist->acao}}</td>
+                        <td style="text-align: center;">{{$hist->referencia}}</td>
+                        <td style="text-align: center;">{{$hist->codigo}}</td>
                         <td>{{date("d/m/Y H:i", strtotime($hist->created_at))}}</td>
                     </tr>
                     @endforeach

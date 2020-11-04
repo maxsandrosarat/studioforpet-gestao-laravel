@@ -32,7 +32,7 @@
                                         </select>
                                         <br/>
                                         <label for="valor">Valor: R$
-                                        <input type="text" class="form-control" name="valor" id="valor" placeholder="Selecione o produto" required></label>
+                                        <input type="text" class="form-control" name="valor" id="valor" placeholder="Selecione o produto" onblur="getValor('valor')" required></label>
                                         <br/>
                                         <label for="cliente">Cliente</label>
                                         <select class="custom-select" id="cliente" name="cliente">
@@ -43,7 +43,7 @@
                                         </select>
                                         <br/>
                                         <label for="desconto">Desconto</label>
-                                        <input type="text" class="form-control" name="desconto" id="desconto" placeholder="Exemplo: 35.5 (opcional)">
+                                        <input type="text" class="form-control" name="desconto" id="desconto" placeholder="Exemplo: 35.5 (opcional)" onblur="getValor('desconto')">
                                         <label for="formaPagamento">Forma Pagamento</label>
                                         <select class="custom-select" id="formaPagamento" name="formaPagamento" required>
                                             <option value="">Selecione a forma (obrigatório)</option>

@@ -2,7 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Categoria;
+use App\Models\Raca;
 use App\Models\Saldo;
+use App\Models\Servico;
+use App\Models\TipoAnimal;
 use App\Models\VendaProduto;
 use App\Models\VendaServico;
 use Illuminate\Http\Request;
@@ -26,6 +30,76 @@ class HomeController extends Controller
      */
     public function index()
     {
+        $validador = 0;
+
+        $validador = Servico::count();
+        if($validador == 0){
+            $serv1 = new Servico();
+            $serv1->nome = "Banho";
+            $serv1->preco = 35;
+            $serv1->save();
+            $serv2 = new Servico();
+            $serv2->nome = "Banho & Tosa";
+            $serv2->preco = 45;
+            $serv2->save();
+        }
+        
+        $validador = 0;
+
+        $validador = Raca::count();
+        if($validador == 0){
+            $raca = new Raca();
+            $raca->nome = "Persa";
+            $raca->save();
+            $raca1 = new Raca();
+            $raca1->nome = "Mestiço (Vira Lata)";
+            $raca1->save();
+            $raca2 = new Raca();
+            $raca2->nome = "Lhasa Apso";
+            $raca2->save();
+            $raca3 = new Raca();
+            $raca3->nome = "Shih-tzu";
+            $raca3->save();
+            $raca4 = new Raca();
+            $raca4->nome = "Poodle";
+            $raca4->save();
+            $raca5 = new Raca();
+            $raca5->nome = "Dachshund (Salsicha)";
+            $raca5->save();
+        }
+
+        $validador = 0;
+
+        $validador = TipoAnimal::count();
+        if($validador == 0){
+            $tipo1 = new TipoAnimal();
+            $tipo1->nome = "Cachorro";
+            $tipo1->save();
+            $tipo2 = new TipoAnimal();
+            $tipo2->nome = "Gato";
+            $tipo2->save();
+        }
+
+        $validador = 0;
+
+        $validador = Categoria::count();
+        if($validador == 0){
+            $cat1 = new Categoria();
+            $cat1->nome = "Shampoo";
+            $cat1->save();
+            $cat2 = new Categoria();
+            $cat2->nome = "Condicionador";
+            $cat2->save();
+            $cat3 = new Categoria();
+            $cat3->nome = "Perfume";
+            $cat3->save();
+            $cat4 = new Categoria();
+            $cat4->nome = "Acessório";
+            $cat4->save();
+        }
+
+        $validador = 0;
+        
         $validador = Saldo::count();
         if($validador == 0){
             $saldoPrincipal = new Saldo();
@@ -79,6 +153,7 @@ class HomeController extends Controller
         $saldoDiaAnteriorProd->saldo = $vendProd;
         $saldoDiaAnteriorProd->save();
 
+        
 
         $saldos = Saldo::all();
         return view('home',compact('saldos','vendServ'));

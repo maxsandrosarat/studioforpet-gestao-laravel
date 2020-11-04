@@ -16,7 +16,6 @@ class CreateTipoAnimalsTable extends Migration
         Schema::create('tipo_animals', function (Blueprint $table) {
             $table->id();
             $table->string('nome');
-            $table->boolean('ativo')->default(true);
             $table->timestamps();
         });
     }

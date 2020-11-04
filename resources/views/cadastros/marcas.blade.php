@@ -43,6 +43,8 @@
                         <th>Código</th>
                         <th>Nome</th>
                         <th>Ativo</th>
+                        <th>Criação</th>
+                        <th>Última Atualização</th>
                         <th>Ações</th>
                     </tr>
                 </thead>
@@ -51,7 +53,15 @@
                     <tr>
                         <td style="text-align: center;">{{$marca->id}}</td>
                         <td style="text-align: center;">{{$marca->nome}}</td>
-                        <td>@if($marca->ativo=='1') Sim @else Não @endif</td>
+                        <td>
+                            @if($marca->ativo==1)
+                                <b><i class="material-icons green">check_circle</i></b>
+                            @else
+                                <b><i class="material-icons red">highlight_off</i></b>
+                            @endif
+                        </td>
+                        <td>{{ $marca->created_at->format('d/m/Y H:i') }}</td>
+                        <td>{{ $marca->updated_at->format('d/m/Y H:i') }}</td>
                         <td style="text-align: center;">
                             <button type="button" class="btn btn-sm btn-warning" data-toggle="modal" data-target="#exampleModal{{$marca->id}}" data-toggle="tooltip" data-placement="left" title="Editar">
                                 <i class="material-icons md-48">edit</i>
@@ -72,12 +82,6 @@
                                             <div class="form-group">
                                                 <label for="nome">Nome da Marca</label>
                                                 <input type="text" class="form-control" name="nome" id="nome" value="{{$marca->nome}}" required>
-                                                <br/>
-                                                <h5>Ativo?</h5>
-                                                <input type="radio" id="sim" name="ativo" value="1" @if($marca->ativo=="1") checked @endif required>
-                                                <label for="sim">Sim</label>
-                                                <input type="radio" id="nao" name="ativo" value="0" @if($marca->ativo=="0") checked @endif required>
-                                                <label for="nao">Não</label>
                                             </div>
                                     </div>
                                     <div class="modal-footer">
@@ -87,7 +91,11 @@
                                 </div>
                                 </div>
                             </div>
-                            <a href="/marcas/apagar/{{$marca->id}}" class="btn btn-sm btn-danger" data-toggle="tooltip" data-placement="right" title="Inativar"><i class="material-icons md-48">delete</i></a>
+                            @if($marca->ativo==1)
+                                <a href="/marcas/apagar/{{$marca->id}}" class="btn btn-sm btn-secondary" data-toggle="tooltip" data-placement="right" title="Inativar"><i class="material-icons md-48 red">disabled_by_default</i></a>
+                            @else
+                                <a href="/marcas/apagar/{{$marca->id}}" class="btn btn-sm btn-secondary" data-toggle="tooltip" data-placement="right" title="Ativar"><i class="material-icons md-48 green">check_box</i></a>
+                            @endif
                         </td>
                     </tr>
                     @endforeach

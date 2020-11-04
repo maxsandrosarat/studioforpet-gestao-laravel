@@ -16,4 +16,12 @@ class Pet extends Model
     public function cliente(){
         return $this->belongsTo('App\Models\Cliente');
     }
+
+    public function plano(){
+        return $this->belongsTo('App\Models\Plano');
+    }
+
+    function pagamentos(){
+        return $this->belongsToMany("App\Models\PagamentoPlano", "pagamento_planos")->withPivot('mes','vencimento','valorPago','created_at');
+    }
 }

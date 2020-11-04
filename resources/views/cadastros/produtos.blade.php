@@ -36,7 +36,7 @@
                                             @endforeach
                                         </select>
                                         <label for="nome">Nome do Produto</label>
-                                        <input type="text" class="form-control" name="nome" id="nome" placeholder="Exemplo: Ração" required>
+                                        <input type="text" class="form-control" name="nome" id="nome" placeholder="Exemplo: Baby" required>
                                         <br/>
                                         <label for="tipo">Tipo de Animal</label>
                                         <select class="custom-select" id="tipo" name="tipo" required>
@@ -66,16 +66,10 @@
                                         <input type="text" class="form-control" name="embalagem" id="embalagem" placeholder="Exemplo: 10 KG" required>
                                         <br/>
                                         <label for="preco">Preço do Produto</label>
-                                        <input type="text" class="form-control" name="preco" id="preco" placeholder="Exemplo: 10.5" required>
+                                        <input type="text" class="form-control" name="preco" id="preco" placeholder="Exemplo: 10.5" onblur="getValor('preco')" required>
                                         <br/>
                                         <label for="estoque">Estoque do Produto</label>
                                         <input type="number" class="form-control" name="estoque" id="estoque" placeholder="Exemplo: 100" required>
-                                        <br/>
-                                        <h5>Ativo?</h5>
-                                        <input type="radio" id="sim" name="ativo" value="1" required>
-                                        <label for="sim">Sim</label>
-                                        <input type="radio" id="nao" name="ativo" value="0" required>
-                                        <label for="nao">Não</label>
                                     </div>
                                     <div class="modal-footer">
                                         <button type="submit" class="btn btn-primary btn-sn">Salvar</button>
@@ -140,9 +134,10 @@
                         <th>Foto</th>
                         <th>Produto</th>
                         <th>Preço</th>
-                        <th>Estoque</th>
-                        <th>Categoria</th>
                         <th>Ativo</th>
+                        <th>Estoque</th>
+                        <th>Criação</th>
+                        <th>Última Atualização</th>
                         <th>Ações</th>
                     </tr>
                 </thead>
@@ -162,15 +157,27 @@
                             </div>
                             <div class="modal-body" style="color: black; text-align: center;">
                                 @if($prod->foto!="") <img src="/storage/{{$prod->foto}}" alt="foto_produto" style="width: 100%"> @else <i class="material-icons md-60">no_photography</i> @endif
+                                <hr/>
+                                <h6 class="font-italic">
+                                {{$prod->categoria->nome}} {{$prod->nome}} {{$prod->tipo_animal->nome}} {{$prod->tipo_fase}} {{$prod->marca->nome}} {{$prod->embalagem}}
+                                </h6>
+                                <hr/>
                             </div>
                             </div>
                         </div>
                         </div>
-                        <td>{{$prod->categoria->nome}} {{$prod->nome}} {{$prod->tipo_animal->nome}} @if($prod->tipo_fase=='filhote') Filhote @else @if($prod->tipo_fase=='adulto') Adulto @else @if($prod->tipo_fase=='castrado') Castrado @else Todas @endif @endif @endif {{$prod->marca->nome}} {{$prod->embalagem}}</td>
+                        <td>{{$prod->categoria->nome}} {{$prod->nome}} {{$prod->tipo_animal->nome}} {{$prod->tipo_fase}} {{$prod->marca->nome}} {{$prod->embalagem}}</td>
                         <td width="78-">{{ 'R$ '.number_format($prod->preco, 2, ',', '.')}}</td>
+                        <td>
+                            @if($prod->ativo==1)
+                                <b><i class="material-icons green">check_circle</i></b>
+                            @else
+                                <b><i class="material-icons red">highlight_off</i></b>
+                            @endif
+                        </td>
                         <td>{{$prod->estoque}}</td>
-                        <td>{{$prod->categoria->nome}}</td>
-                        <td>@if($prod->ativo=='1') Sim @else Não @endif</td>
+                        <td>{{ $prod->created_at->format('d/m/Y H:i') }}</td>
+                        <td>{{ $prod->updated_at->format('d/m/Y H:i') }}</td>
                         <td>
                             <button type="button" class="btn btn-sm btn-warning" data-toggle="modal" data-target="#exampleModal{{$prod->id}}" data-toggle="tooltip" data-placement="left" title="Editar">
                                 <i class="material-icons md-48">edit</i>
@@ -253,16 +260,11 @@
                                                         <input type="text" class="form-control" name="embalagem" id="embalagem" value="{{$prod->embalagem}}" required>
                                                         <br/>
                                                         <label for="preco">Preço do Produto</label>
-                                                        <input type="text" class="form-control" name="preco" id="preco" value="{{$prod->preco}}" required>
+                                                        <input type="text" class="form-control" name="preco" id="precoE" value="{{$prod->preco}}" onblur="getValor('precoE')" required>
                                                         <br/>
                                                         <!--<label for="estoque">Estoque do Produto</label>
                                                         <input type="number" class="form-control" name="estoque" id="estoque" value="{{$prod->estoque}}" required>
                                                         <br><br/>-->
-                                                        <h5>Ativo?</h5>
-                                                        <input type="radio" id="sim" name="ativo" value="1" @if($prod->ativo=="1") checked @endif required>
-                                                        <label for="sim">Sim</label>
-                                                        <input type="radio" id="nao" name="ativo" value="0" @if($prod->ativo=="0") checked @endif required>
-                                                        <label for="nao">Não</label>
                                                     </div>
                                                     <div class="modal-footer">
                                                         <button type="submit" class="btn btn-primary btn-sn">Salvar</button>
@@ -274,7 +276,11 @@
                                 </div>
                                 </div>
                             </div>
-                            <a href="/produtos/apagar/{{$prod->id}}" class="btn btn-sm btn-danger" data-toggle="tooltip" data-placement="right" title="Inativar"><i class="material-icons md-48">delete</i></a>
+                            @if($prod->ativo==1)
+                                <a href="/produtos/apagar/{{$prod->id}}" class="btn btn-sm btn-secondary" data-toggle="tooltip" data-placement="right" title="Inativar"><i class="material-icons md-48 red">disabled_by_default</i></a>
+                            @else
+                                <a href="/produtos/apagar/{{$prod->id}}" class="btn btn-sm btn-secondary" data-toggle="tooltip" data-placement="right" title="Ativar"><i class="material-icons md-48 green">check_box</i></a>
+                            @endif
                         </td>
                     </tr>
                     @endforeach

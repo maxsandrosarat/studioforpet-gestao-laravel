@@ -74,6 +74,7 @@ Route::group(['prefix' => 'clientes'], function() {
     Route::post('/', 'UserController@cadastrarCliente');
     Route::post('/editar/{id}', 'UserController@editarCliente');
     Route::get('/filtro', 'UserController@filtroCliente');
+    Route::get('/telefones/apagar/{c}/{t}', 'UserController@apagarTelefone');
 });
 
 Route::group(['prefix' => 'servicos'], function() {
@@ -89,12 +90,24 @@ Route::group(['prefix' => 'racas'], function() {
     Route::post('/editar/{id}', 'UserController@editarRaca');
 });
 
+Route::group(['prefix' => 'planos'], function() {
+    Route::get('/', 'UserController@indexPlanos');
+    Route::post('/', 'UserController@cadastrarPlano');
+    Route::post('/editar/{id}', 'UserController@editarPlano');
+    Route::get('/apagar/{id}', 'UserController@apagarPlano');
+});
+
 Route::group(['prefix' => 'pets'], function() {
     Route::get('/', 'UserController@indexPets');
     Route::post('/', 'UserController@cadastrarPet');
     Route::post('/editar/{id}', 'UserController@editarPet');
     Route::get('/apagar/{id}', 'UserController@apagarPet');
     Route::get('/filtro', 'UserController@filtroPet');
+    Route::get('/pagamentos/{id}', 'UserController@pagamentosPlano');
+    Route::post('/pagar/{id}', 'UserController@pagarPlano');
+    Route::post('/trocar/{id}', 'UserController@trocarPlano');
+    Route::post('/reativar/{id}', 'UserController@reativarPlano');
+    Route::get('/cancelar/{id}', 'UserController@cancelarPlano');
 });
 
 Route::group(['prefix' => 'vendas'], function() {
@@ -125,6 +138,21 @@ Route::group(['prefix' => 'lancamentos'], function() {
 Route::group(['prefix' => 'historicos'], function() {
     Route::get('/', 'UserController@historicos');
     Route::get('/filtro', 'UserController@filtroHistoricos');
+});
+
+Route::group(['prefix' => 'despesas'], function() {
+    Route::get('/', 'UserController@despesas');
+
+    Route::group(['prefix' => 'lancamentos'], function() {
+        Route::get('/dia', 'UserController@indexDespesasDia');
+        Route::get('/mes', 'UserController@indexDespesasMes');
+        Route::get('/', 'UserController@indexDespesas');
+        Route::post('/', 'UserController@cadastrarDespesa');
+        Route::post('/pagar/{id}', 'UserController@pagarDespesa');
+        Route::post('/editar/{id}', 'UserController@editarDespesa');
+        Route::get('/apagar/{id}', 'UserController@apagarDespesa');
+        Route::get('/filtro', 'UserController@filtroDespesa');
+    });
 });
 
 

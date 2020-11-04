@@ -23,6 +23,14 @@
                                 <form action="/vendas/servicos" method="POST">
                                     @csrf
                                     <div class="form-group">
+                                        <label for="pet">Pet</label>
+                                        <select class="custom-select" id="pet" name="pet">
+                                            <option value="">Selecione o pet (opcional)</option>
+                                            @foreach ($pets as $pet)
+                                                <option value="{{$pet->id}}">{{$pet->nome}} ({{$pet->cliente->nome}})</option>
+                                            @endforeach
+                                        </select>
+                                        <br/>
                                         <label for="servico">Serviço</label>
                                         <select class="custom-select" id="servico" name="servico" onchange="valorServico();" required>
                                             <option value="">Selecione o serviço (obrigatório)</option>
@@ -32,18 +40,10 @@
                                         </select>
                                         <br/>
                                         <label for="valor">Valor: R$
-                                        <input type="text" class="form-control" name="valor" id="valor" placeholder="Exemplo: 35.5" required></label>
-                                        <br/>
-                                        <label for="pet">Pet</label>
-                                        <select class="custom-select" id="pet" name="pet">
-                                            <option value="">Selecione o pet (opcional)</option>
-                                            @foreach ($pets as $pet)
-                                                <option value="{{$pet->id}}">{{$pet->nome}} ({{$pet->cliente->nome}})</option>
-                                            @endforeach
-                                        </select>
+                                        <input type="text" class="form-control" name="valor" id="valor" placeholder="Exemplo: 35.5" onblur="getValor('valor')" required></label>
                                         <br/>
                                         <label for="desconto">Desconto</label>
-                                        <input type="text" class="form-control" name="desconto" id="desconto" placeholder="Exemplo: 35.5 (opcional)">
+                                        <input type="text" class="form-control" name="desconto" id="desconto" placeholder="Exemplo: 35.5 (opcional)" onblur="getValor('desconto')">
                                         <label for="formaPagamento">Forma Pagamento</label>
                                         <select class="custom-select" id="formaPagamento" name="formaPagamento" required>
                                             <option value="">Selecione a forma (obrigatório)</option>

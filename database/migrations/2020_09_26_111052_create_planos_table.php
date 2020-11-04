@@ -17,7 +17,8 @@ class CreatePlanosTable extends Migration
             $table->id();
             $table->string('nome');
             $table->longText('descricao')->nullable();
-            $table->float('valor');
+            $table->float('valor')->default(0);
+            $table->boolean('ativo')->default(true);
             $table->timestamps();
         });
     }
