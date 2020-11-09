@@ -12,6 +12,9 @@
             <li @if($current=="vendas") class="nav-item active" @else class="nav-item" @endif>
                 <a class="nav-link" href="/vendas">Vendas</a>
             </li>
+            <li @if($current=="agendamentos") class="nav-item active" @else class="nav-item" @endif>
+                <a class="nav-link" href="/agendamentos">Agendamentos</a>
+            </li>
             <li @if($current=="lancamentos") class="nav-item active" @else class="nav-item" @endif>
                 <a class="nav-link" href="/lancamentos">Lançamentos</a>
             </li>
@@ -34,12 +37,6 @@
             <li @if($current=="login") class="nav-item active" @else class="nav-item" @endif>
                 <a class="nav-link" href="{{ route('login') }}">{{ __('Login') }}</a>
             </li>
-            
-            @if (Route::has('register'))
-            <li @if($current=="register") class="nav-item active" @else class="nav-item" @endif>
-               <a class="nav-link" href="{{ route('register') }}">{{ __('Cadastre-se') }}</a>
-           </li>
-            @endif
 
             <!--LOGADO-->
             @else
@@ -61,7 +58,7 @@
             </li>
             <li class="nav-item dropdown" class="nav-item">
                 @if(Auth::user()->foto!="")
-                <img style="border-radius: 20px;" src="/storage/{{Auth::user()->foto}}" alt="foto_perfil" width="10%">
+                <img id="foto_perfil" src="/storage/{{Auth::user()->foto}}" alt="foto_perfil">
                 @endif
             </li>
             @endguest

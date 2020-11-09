@@ -17,7 +17,9 @@ class CreatePagamentoPlanosTable extends Migration
             $table->id();
             $table->foreignId('pet_id')->constrained()->cascadeOnDelete();
             $table->foreignId('plano_id')->constrained()->cascadeOnDelete();
+            $table->string('forma_pagamento');
             $table->float('valorPago');
+            $table->string('observacao')->nullable();
             $table->timestamps();
         });
     }

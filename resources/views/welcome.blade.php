@@ -74,8 +74,7 @@
                         <a href="{{ url('/home') }}">Home</a>
                     @else
                             <b><h4>ACESSO AO SISTEMA</h4></b>
-                            <h4><a href="{{ route('register') }}" class="badge badge-dark">Cadastre-se</a>
-                            <a href="{{ route('login') }}" class="badge badge-dark">Login</a></h4>
+                            <h4><a href="{{ route('login') }}" class="badge badge-dark">Login</a></h4>
                     @endauth
                 </div>
             @endif

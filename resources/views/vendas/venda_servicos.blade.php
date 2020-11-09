@@ -4,6 +4,18 @@
     <div class="card border">
         <div class="card-body">
             <h5 class="card-title">Vendas de Serviços</h5>
+            @if(session('mensagem'))
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-md-8">
+                        <div class="alert alert-success" role="alert">
+                            <button type="button" class="close" data-dismiss="alert">x</button>
+                            <p>{{session('mensagem')}}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endif
             <a type="button" class="float-button" data-toggle="modal" data-target="#exampleModal" data-toggle="tooltip" data-placement="bottom" title="Lançar Nova Venda">
                 <i class="material-icons blue md-60">add_circle</i>
             </a>
@@ -73,7 +85,7 @@
                         @endif
                         @if($view=="filtro")
                         Sem resultados da busca!
-                        <a href="/vendaServs" class="btn btn-success">Nova Busca</a>
+                        <a href="/vendas/servicos" class="btn btn-success">Nova Busca</a>
                         @endif
                     </div>
             @else
@@ -93,6 +105,16 @@
                             <option value="{{$pet->id}}">{{$pet->nome}} ({{$pet->cliente->nome}})</option>
                         @endforeach
                     </select>
+                    <select class="custom-select" id="formaPagamento" name="formaPagamento">
+                        <option value="">Selecione uma forma de pagamento</option>
+                        @foreach ($formas as $forma)
+                        <option value="{{$forma->forma_pagamento}}">{{$forma->forma_pagamento}}</option>
+                        @endforeach
+                    </select>
+                    <label for="dataInicio">Início
+                    <input class="form-control" type="date" name="dataInicio"></label>
+                    <label for="dataFim">Fim
+                    <input class="form-control" type="date" name="dataFim"></label>
                     <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Filtrar</button>
                 </form>
                 </div>
@@ -126,25 +148,52 @@
                         <button type="button" class="badge badge-primary" data-toggle="modal" data-target="#exampleModalDesc{{$vendaServ->id}}">Observação</button></td>@endif
                         <!-- Modal -->
                         <div class="modal fade bd-example-modal-lg" id="exampleModalDesc{{$vendaServ->id}}" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
-                        <div class="modal-dialog modal-lg" role="document">
+                        <div class="modal-dialog" role="document">
                             <div class="modal-content">
                             <div class="modal-header">
+                                <h5 class="modal-title" id="exampleModalLabel">Venda de Serviço Nº {{$vendaServ->id}}</h5>
                                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                 <span aria-hidden="true">&times;</span>
                                 </button>
                             </div>
                             <div class="modal-body">
-                                {{$vendaServ->observacao}}
+                                Observação: {{$vendaServ->observacao}}
                             </div>
                             </div>
                         </div>
                         </div>
                         <td>{{ $vendaServ->created_at->format('d/m/Y H:i') }}</td>
                         <td>
-                            <a href="/vendas/servicos/apagar/{{$vendaServ->id}}" class="btn btn-sm btn-danger" data-toggle="tooltip" data-placement="right" title="Inativar"><i class="material-icons md-48">delete</i></a>
+                            <button type="button" class="badge badge-danger" data-toggle="modal" data-target="#exampleModalDelete{{$vendaServ->id}}"><i class="material-icons md-18">delete</i></button></td>
+                            <!-- Modal -->
+                            <div class="modal fade bd-example-modal-lg" id="exampleModalDelete{{$vendaServ->id}}" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+                                <div class="modal-dialog" role="document">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="exampleModalLabel">Venda de Serviço Nº {{$vendaServ->id}}</h5>
+                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                            </button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <h5>Tem certeza que deseja excluir essa venda?</h5>
+                                            <p>Não será possivel reverter esta ação e nem consultar mais essa venda.</p>
+                                            <a href="/vendas/servicos/apagar/{{$vendaServ->id}}" class="btn btn-sm btn-danger" data-toggle="tooltip" data-placement="right" title="Inativar">Excluir</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </td>
                     </tr>
                     @endforeach
+                    @if($view=="filtro")
+                    <tr>
+                        <td colspan="3">TOTAIS</td>
+                        <td>{{ 'R$ '.number_format($total_valor, 2, ',', '.')}}</td>
+                        <td>{{ 'R$ '.number_format($total_desconto, 2, ',', '.')}}</td>
+                        <td colspan="4">TOTAL GERAL: {{ 'R$ '.number_format($total_geral, 2, ',', '.')}}</td>
+                    </tr>
+                    @endif
                 </tbody>
             </table>
             </div>

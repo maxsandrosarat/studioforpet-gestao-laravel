@@ -31,7 +31,7 @@
                             </div>
                             <div class="card-body">
                                 <h3 class="card-title">R$ {{ number_format($saldo->saldo, 2, ',', '.') }}</h3>
-                                <a href="/vendas/servicos" class="btn btn-sm btn-primary">Detalhes</a>
+                                <a href="/vendas/servicos/diaAnterior" class="btn btn-sm btn-primary">Detalhes</a>
                             </div>
                             <div class="card-footer text-muted">
                                 Última atualização: <br/>{{ $saldo->updated_at->format('d/m/Y H:i') }}
@@ -48,7 +48,7 @@
                             </div>
                             <div class="card-body">
                                 <h3 class="card-title">R$ {{ number_format($saldo->saldo, 2, ',', '.') }}</h3>
-                                <a href="/vendas/produtos" class="btn btn-sm btn-primary">Detalhes</a>
+                                <a href="/vendas/produtos/diaAnterior" class="btn btn-sm btn-primary">Detalhes</a>
                             </div>
                             <div class="card-footer text-muted">
                                 Última atualização: <br/>{{ $saldo->updated_at->format('d/m/Y H:i') }}
@@ -65,7 +65,7 @@
                             </div>
                             <div class="card-body">
                                 <h3 class="card-title">R$ {{ number_format($saldo->saldo, 2, ',', '.') }}</h3>
-                                <a href="/vendas/servicos" class="btn btn-sm btn-primary">Detalhes</a>
+                                <a href="/vendas/servicos/dia" class="btn btn-sm btn-primary">Detalhes</a>
                             </div>
                             <div class="card-footer text-muted">
                                 Última atualização: <br/>{{ $saldo->updated_at->format('d/m/Y H:i') }}
@@ -82,7 +82,7 @@
                             </div>
                             <div class="card-body">
                                 <h3 class="card-title">R$ {{ number_format($saldo->saldo, 2, ',', '.') }}</h3>
-                                <a href="/vendas/produtos" class="btn btn-sm btn-primary">Detalhes</a>
+                                <a href="/vendas/produtos/dia" class="btn btn-sm btn-primary">Detalhes</a>
                             </div>
                             <div class="card-footer text-muted">
                                 Última atualização: <br/>{{ $saldo->updated_at->format('d/m/Y H:i') }}
@@ -94,11 +94,10 @@
                     <div class="d-flex justify-content-center centralizado">
                         <div class="card border-primary text-center" style="width: 300px;">
                             <div class="card-header">
-                                Saldo <br/>Mês Atual
+                                Saldo <br/>Mês (Serviços & Produtos)
                             </div>
                             <div class="card-body">
                                 <h3 class="card-title">R$ {{ number_format($saldo->saldo, 2, ',', '.') }}</h3>
-                                <a href="/lancamentos" class="btn btn-sm btn-primary">Detalhes</a>
                             </div>
                             <div class="card-footer text-muted">
                                 Última atualização: <br/>{{ $saldo->updated_at->format('d/m/Y H:i') }}

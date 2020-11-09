@@ -4,6 +4,18 @@
     <div class="card border">
         <div class="card-body">
             <h5 class="card-title">Lançamentos</h5>
+            @if(session('mensagem'))
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-md-8">
+                        <div class="alert alert-success" role="alert">
+                            <button type="button" class="close" data-dismiss="alert">x</button>
+                            <p>{{session('mensagem')}}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endif
             <hr/>
             @foreach ($saldos as $saldo)
                 <p class="font-weight-bolder">
@@ -34,29 +46,25 @@
                 <h5>Filtros: </h5>
                 <form class="form-inline my-2 my-lg-0" method="GET" action="/lancamentos/filtro">
                     @csrf
-                    <div class="input-group mb-3">
                         <select class="custom-select" id="tipo" name="tipo">
                             <option value="">Selecione o tipo</option>
                             <option value="deposito">Depósito</option>
                             <option value="retirada">Retirada</option>
                         </select>
                         <select class="custom-select" id="user" name="user">
-                            <option value="">Selecione um usuário</option>
+                            <option value="">Selecione o usuário</option>
                             @foreach ($users as $user)
                                 <option value="{{$user->id}}">{{$user->name}}</option>
                             @endforeach
                         </select>
-                        <label for="dataInicio">Data Início
+                        <label for="dataInicio">Início
                         <input class="form-control" type="date" name="dataInicio"></label>
-                        <label for="dataFim">Data Fim
+                        <label for="dataFim">Fim
                         <input class="form-control" type="date" name="dataFim"></label>
-                        <div class="input-group-append">
-                          <button class="btn btn-outline-success" type="submit" id="button">Filtrar</button>
-                        </div>
-                      </div>
+                        <button class="btn btn-outline-success" type="submit" id="button">Filtrar</button>
                 </form>
                 </div>
-                <br/>
+                <hr/>
             <h5>Exibindo {{$lancs->count()}} de {{$lancs->total()}} de Lançamentos ({{$lancs->firstItem()}} a {{$lancs->lastItem()}})</h5>
             <div class="table-responsive-xl">
             <table class="table table-striped table-ordered table-hover">

@@ -4,6 +4,18 @@
     <div class="card border">
         <div class="card-body">
             <h5 class="card-title">Histórico</h5>
+            @if(session('mensagem'))
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-md-8">
+                        <div class="alert alert-success" role="alert">
+                            <button type="button" class="close" data-dismiss="alert">x</button>
+                            <p>{{session('mensagem')}}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endif
             @if(count($hists)==0)
             <div class="alert alert-dark" role="alert">
                 @if($view=="inicial")
@@ -19,7 +31,6 @@
                 <h5>Filtros: </h5>
                 <form class="form-inline my-2 my-lg-0" method="GET" action="/historicos/filtro">
                     @csrf
-                    <div class="input-group mb-3">
                         <select class="custom-select" id="user" name="user">
                             <option value="">Selecione um usuário</option>
                             @foreach ($users as $user)
@@ -27,18 +38,22 @@
                             @endforeach
                         </select>
                         <select class="custom-select" id="acao" name="acao">
+                            <option value="">Selecione uma ação</option>
                             @foreach ($acoes as $acao)
                             <option value="{{$acao->acao}}">{{$acao->acao}}</option>
                             @endforeach
                         </select>
-                        <label for="dataInicio">Data Início
+                        <select class="custom-select" id="referencia" name="referencia">
+                            <option value="">Selecione uma referência</option>
+                            @foreach ($referencias as $referencia)
+                            <option value="{{$referencia->referencia}}">{{$referencia->referencia}}</option>
+                            @endforeach
+                        </select>
+                        <label for="dataInicio">Início
                         <input class="form-control" type="date" name="dataInicio"></label>
-                        <label for="dataFim">Data Fim
+                        <label for="dataFim">Fim
                         <input class="form-control" type="date" name="dataFim"></label>
-                        <div class="input-group-append">
-                          <button class="btn btn-outline-success" type="submit" id="button">Filtrar</button>
-                        </div>
-                      </div>
+                        <button class="btn btn-outline-success" type="submit" id="button">Filtrar</button>
                 </form>
             </div>
             <br/>

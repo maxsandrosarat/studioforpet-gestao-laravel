@@ -34,6 +34,10 @@ class HomeController extends Controller
 
         $validador = Servico::count();
         if($validador == 0){
+            $serv = new Servico();
+            $serv->nome = "Plano";
+            $serv->preco = 0;
+            $serv->save();
             $serv1 = new Servico();
             $serv1->nome = "Banho";
             $serv1->preco = 35;

@@ -101,7 +101,6 @@ Route::group(['prefix' => 'pets'], function() {
     Route::get('/', 'UserController@indexPets');
     Route::post('/', 'UserController@cadastrarPet');
     Route::post('/editar/{id}', 'UserController@editarPet');
-    Route::get('/apagar/{id}', 'UserController@apagarPet');
     Route::get('/filtro', 'UserController@filtroPet');
     Route::get('/pagamentos/{id}', 'UserController@pagamentosPlano');
     Route::post('/pagar/{id}', 'UserController@pagarPlano');
@@ -115,6 +114,8 @@ Route::group(['prefix' => 'vendas'], function() {
 
     Route::group(['prefix' => 'servicos'], function() {
         Route::get('/', 'UserController@indexVendaServicos');
+        Route::get('/dia', 'UserController@indexVendaServicosDia');
+        Route::get('/diaAnterior', 'UserController@indexVendaServicosDiaAnterior');
         Route::post('/', 'UserController@cadastrarVendaServico');
         Route::get('/apagar/{id}', 'UserController@apagarVendaServico');
         Route::get('/filtro', 'UserController@filtroVendaServico');
@@ -122,6 +123,8 @@ Route::group(['prefix' => 'vendas'], function() {
     
     Route::group(['prefix' => 'produtos'], function() {
         Route::get('/', 'UserController@indexVendaProdutos');
+        Route::get('/dia', 'UserController@indexVendaProdutosDia');
+        Route::get('/diaAnterior', 'UserController@indexVendaProdutosDiaAnterior');
         Route::post('/', 'UserController@cadastrarVendaProduto');
         Route::get('/apagar/{id}', 'UserController@apagarVendaProduto');
         Route::get('/filtro', 'UserController@filtroVendaProduto');
@@ -133,6 +136,15 @@ Route::group(['prefix' => 'lancamentos'], function() {
     Route::post('/deposito', 'UserController@depositoLancamento');
     Route::post('/retirada', 'UserController@retiradaLancamento');
     Route::get('/filtro', 'UserController@filtroLancamento');
+});
+
+Route::group(['prefix' => 'agendamentos'], function() {
+    Route::get('/', 'UserController@indexAgendamentos');
+    Route::get('/novo/{d}/{ho}', 'UserController@novoAgendamento');
+    Route::post('/', 'UserController@cadastrarAgendamento');
+    Route::get('/atendido/{id}', 'UserController@atendidoAgendamento');
+    Route::get('/cancelar/{id}', 'UserController@cancelarAgendamento');
+    Route::get('/filtro', 'UserController@filtroAgendamento');
 });
 
 Route::group(['prefix' => 'historicos'], function() {
@@ -153,6 +165,14 @@ Route::group(['prefix' => 'despesas'], function() {
         Route::get('/apagar/{id}', 'UserController@apagarDespesa');
         Route::get('/filtro', 'UserController@filtroDespesa');
     });
+});
+
+Route::group(['prefix' => 'usuarios'], function() {
+    Route::get('/', 'UserController@indexUsuarios');
+    Route::post('/', 'UserController@cadastrarUsuario');
+    Route::get('/filtro', 'UserController@filtroUsuario');
+    Route::post('/editar/{id}', 'UserController@editarUsuario');
+    Route::get('/apagar/{id}', 'UserController@apagarUsuario');
 });
 
 

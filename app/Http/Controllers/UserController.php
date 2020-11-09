@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Agendamento;
 use App\Models\Categoria;
 use App\Models\Cliente;
 use App\Models\ClienteTelefone;
@@ -27,6 +28,7 @@ use DateTime;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 
 class UserController extends Controller
@@ -96,13 +98,15 @@ class UserController extends Controller
         $view = "inicial";
         $users = User::orderBy('name')->get();
         $acoes = DB::table('historicos')->select(DB::raw("acao"))->groupBy('acao')->get();
+        $referencias = DB::table('historicos')->select(DB::raw("referencia"))->groupBy('referencia')->get();
         $hists = Historico::orderBy('created_at', 'desc')->paginate(20);
-        return view('historico.historico',compact('view','users','acoes','hists'));
+        return view('historico.historico',compact('view','users','acoes','referencias','hists'));
     }
 
     public function filtroHistoricos(Request $request)
     {
-        $tipo = $request->input('tipo');
+        $acao = $request->input('acao');
+        $referencia = $request->input('referencia');
         if($request->input('user')!=""){
             $userId = $request->input('user');
             $user = User::find($userId);
@@ -110,63 +114,127 @@ class UserController extends Controller
         }
         $dataInicio = $request->input('dataInicio');
         $dataFim = $request->input('dataFim');
-        if(isset($tipo)){
-            if(isset($user)){
-                if(isset($dataInicio)){
-                    if(isset($dataFim)){
-                        $hists = Historico::where('tipo','like',"%$tipo%")->where('usuario','like',"$usuario")->whereBetween('created_at',["$dataInicio"." 00:00", "$dataFim"." 23:59"])->paginate(100);
+        if(isset($referencia)){
+            if(isset($acao)){
+                if(isset($user)){
+                    if(isset($dataInicio)){
+                        if(isset($dataFim)){
+                            $hists = Historico::where('referencia','like',"%$referencia%")->where('acao','like',"%$acao%")->where('acao','like',"%$acao%")->where('usuario','like',"$usuario")->whereBetween('created_at',["$dataInicio"." 00:00", "$dataFim"." 23:59"])->paginate(100);
+                        } else {
+                            $hists = Historico::where('referencia','like',"%$referencia%")->where('acao','like',"%$acao%")->where('usuario','like',"$usuario")->whereBetween('created_at',["$dataInicio"." 00:00", date("Y/m/d")." 23:59"])->paginate(100);
+                        }
                     } else {
-                        $hists = Historico::where('tipo','like',"%$tipo%")->where('usuario','like',"$usuario")->whereBetween('created_at',["$dataInicio"." 00:00", date("Y/m/d")." 23:59"])->paginate(100);
+                        if(isset($dataFim)){
+                            $hists = Historico::where('referencia','like',"%$referencia%")->where('acao','like',"%$acao%")->where('usuario','like',"$usuario")->whereBetween('created_at',["", "$dataFim"." 23:59"])->paginate(100);
+                        } else {
+                            $hists = Historico::where('referencia','like',"%$referencia%")->where('acao','like',"%$acao%")->where('usuario','like',"$usuario")->paginate(100);
+                        }
                     }
                 } else {
-                    if(isset($dataFim)){
-                        $hists = Historico::where('tipo','like',"%$tipo%")->where('usuario','like',"$usuario")->whereBetween('created_at',["", "$dataFim"." 23:59"])->paginate(100);
+                    if(isset($dataInicio)){
+                        if(isset($dataFim)){
+                            $hists = Historico::where('referencia','like',"%$referencia%")->where('acao','like',"%$acao%")->whereBetween('created_at',["$dataInicio"." 00:00", "$dataFim"." 23:59"])->paginate(100);
+                        } else {
+                            $hists = Historico::where('referencia','like',"%$referencia%")->where('acao','like',"%$acao%")->whereBetween('created_at',["$dataInicio"." 00:00", date("Y/m/d")])->paginate(100);
+                        }
                     } else {
-                        $hists = Historico::where('tipo','like',"%$tipo%")->where('usuario','like',"$usuario")->paginate(100);
+                        if(isset($dataFim)){
+                            $hists = Historico::where('referencia','like',"%$referencia%")->where('acao','like',"%$acao%")->whereBetween('created_at',["", "$dataFim"." 23:59"])->paginate(100);
+                        } else {
+                            $hists = Historico::where('referencia','like',"%$referencia%")->where('acao','like',"%$acao%")->paginate(100);
+                        }
                     }
                 }
             } else {
-                if(isset($dataInicio)){
-                    if(isset($dataFim)){
-                        $hists = Historico::where('tipo','like',"%$tipo%")->whereBetween('created_at',["$dataInicio"." 00:00", "$dataFim"." 23:59"])->paginate(100);
+                if(isset($user)){
+                    if(isset($dataInicio)){
+                        if(isset($dataFim)){
+                            $hists = Historico::where('referencia','like',"%$referencia%")->where('usuario','like',"$usuario")->whereBetween('created_at',["$dataInicio"." 00:00", "$dataFim"." 23:59"])->paginate(100);
+                        } else {
+                            $hists = Historico::where('referencia','like',"%$referencia%")->where('usuario','like',"$usuario")->whereBetween('created_at',["$dataInicio"." 00:00", date("Y/m/d")])->paginate(100);
+                        }
                     } else {
-                        $hists = Historico::where('tipo','like',"%$tipo%")->whereBetween('created_at',["$dataInicio"." 00:00", date("Y/m/d")])->paginate(100);
+                        if(isset($dataFim)){
+                            $hists = Historico::where('referencia','like',"%$referencia%")->where('usuario','like',"$usuario")->whereBetween('created_at',["", "$dataFim"." 23:59"])->paginate(100);
+                        } else {
+                            $hists = Historico::where('referencia','like',"%$referencia%")->where('usuario','like',"$usuario")->paginate(100);
+                        }
                     }
                 } else {
-                    if(isset($dataFim)){
-                        $hists = Historico::where('tipo','like',"%$tipo%")->whereBetween('created_at',["", "$dataFim"." 23:59"])->paginate(100);
+                    if(isset($dataInicio)){
+                        if(isset($dataFim)){
+                            $hists = Historico::where('referencia','like',"%$referencia%")->whereBetween('created_at',["$dataInicio"." 00:00", "$dataFim"." 23:59"])->paginate(100);
+                        } else {
+                            $hists = Historico::where('referencia','like',"%$referencia%")->whereBetween('created_at',["$dataInicio"." 00:00", date("Y/m/d")." 23:59"])->paginate(100);
+                        }
                     } else {
-                        $hists = Historico::where('tipo','like',"%$tipo%")->paginate(100);
+                        if(isset($dataFim)){
+                            $hists = Historico::where('referencia','like',"%$referencia%")->whereBetween('created_at',["", "$dataFim"." 23:59"])->paginate(100);
+                        } else {
+                            return redirect('/historicos');
+                        }
                     }
                 }
             }
         } else {
-            if(isset($user)){
-                if(isset($dataInicio)){
-                    if(isset($dataFim)){
-                        $hists = Historico::where('usuario','like',"$usuario")->whereBetween('created_at',["$dataInicio"." 00:00", "$dataFim"." 23:59"])->paginate(100);
+            if(isset($acao)){
+                if(isset($user)){
+                    if(isset($dataInicio)){
+                        if(isset($dataFim)){
+                            $hists = Historico::where('acao','like',"%$acao%")->where('acao','like',"%$acao%")->where('usuario','like',"$usuario")->whereBetween('created_at',["$dataInicio"." 00:00", "$dataFim"." 23:59"])->paginate(100);
+                        } else {
+                            $hists = Historico::where('acao','like',"%$acao%")->where('usuario','like',"$usuario")->whereBetween('created_at',["$dataInicio"." 00:00", date("Y/m/d")." 23:59"])->paginate(100);
+                        }
                     } else {
-                        $hists = Historico::where('usuario','like',"$usuario")->whereBetween('created_at',["$dataInicio"." 00:00", date("Y/m/d")])->paginate(100);
+                        if(isset($dataFim)){
+                            $hists = Historico::where('acao','like',"%$acao%")->where('usuario','like',"$usuario")->whereBetween('created_at',["", "$dataFim"." 23:59"])->paginate(100);
+                        } else {
+                            $hists = Historico::where('acao','like',"%$acao%")->where('usuario','like',"$usuario")->paginate(100);
+                        }
                     }
                 } else {
-                    if(isset($dataFim)){
-                        $hists = Historico::where('usuario','like',"$usuario")->whereBetween('created_at',["", "$dataFim"." 23:59"])->paginate(100);
+                    if(isset($dataInicio)){
+                        if(isset($dataFim)){
+                            $hists = Historico::where('acao','like',"%$acao%")->whereBetween('created_at',["$dataInicio"." 00:00", "$dataFim"." 23:59"])->paginate(100);
+                        } else {
+                            $hists = Historico::where('acao','like',"%$acao%")->whereBetween('created_at',["$dataInicio"." 00:00", date("Y/m/d")])->paginate(100);
+                        }
                     } else {
-                        $hists = Historico::where('usuario','like',"$usuario")->paginate(100);
+                        if(isset($dataFim)){
+                            $hists = Historico::where('acao','like',"%$acao%")->whereBetween('created_at',["", "$dataFim"." 23:59"])->paginate(100);
+                        } else {
+                            $hists = Historico::where('acao','like',"%$acao%")->paginate(100);
+                        }
                     }
                 }
             } else {
-                if(isset($dataInicio)){
-                    if(isset($dataFim)){
-                        $hists = Historico::whereBetween('created_at',["$dataInicio"." 00:00", "$dataFim"." 23:59"])->paginate(100);
+                if(isset($user)){
+                    if(isset($dataInicio)){
+                        if(isset($dataFim)){
+                            $hists = Historico::where('usuario','like',"$usuario")->whereBetween('created_at',["$dataInicio"." 00:00", "$dataFim"." 23:59"])->paginate(100);
+                        } else {
+                            $hists = Historico::where('usuario','like',"$usuario")->whereBetween('created_at',["$dataInicio"." 00:00", date("Y/m/d")])->paginate(100);
+                        }
                     } else {
-                        $hists = Historico::whereBetween('created_at',["$dataInicio"." 00:00", date("Y/m/d")." 23:59"])->paginate(100);
+                        if(isset($dataFim)){
+                            $hists = Historico::where('usuario','like',"$usuario")->whereBetween('created_at',["", "$dataFim"." 23:59"])->paginate(100);
+                        } else {
+                            $hists = Historico::where('usuario','like',"$usuario")->paginate(100);
+                        }
                     }
                 } else {
-                    if(isset($dataFim)){
-                        $hists = Historico::whereBetween('created_at',["", "$dataFim"." 23:59"])->paginate(100);
+                    if(isset($dataInicio)){
+                        if(isset($dataFim)){
+                            $hists = Historico::whereBetween('created_at',["$dataInicio"." 00:00", "$dataFim"." 23:59"])->paginate(100);
+                        } else {
+                            $hists = Historico::whereBetween('created_at',["$dataInicio"." 00:00", date("Y/m/d")." 23:59"])->paginate(100);
+                        }
                     } else {
-                        return redirect('/Historicos');
+                        if(isset($dataFim)){
+                            $hists = Historico::whereBetween('created_at',["", "$dataFim"." 23:59"])->paginate(100);
+                        } else {
+                            return redirect('/historicos');
+                        }
                     }
                 }
             }
@@ -174,7 +242,8 @@ class UserController extends Controller
         $view = "filtro";
         $users = User::orderBy('name')->get();
         $acoes = DB::table('historicos')->select(DB::raw("acao"))->groupBy('acao')->get();
-        return view('historico.historico',compact('view','users','acoes','hists'));
+        $referencias = DB::table('historicos')->select(DB::raw("referencia"))->groupBy('referencia')->get();
+        return view('historico.historico',compact('view','users','acoes','referencias','hists'));
     }
 
     //CATEGORIA
@@ -196,7 +265,7 @@ class UserController extends Controller
         $hist->codigo = $cat->id;
         $hist->usuario = Auth::user()->name;
         $hist->save();
-        return back();
+        return back()->with('mensagem', 'Categoria Cadastrada com Sucesso!');
     }
 
     public function editarCategoria(Request $request, $id)
@@ -215,7 +284,7 @@ class UserController extends Controller
             $cat->save();
         }
         
-        return back();
+        return back()->with('mensagem', 'Categoria Alterada com Sucesso!');
     }
 
     public function apagarCategoria($id)
@@ -233,6 +302,8 @@ class UserController extends Controller
                 $hist->codigo = $cat->id;
                 $hist->usuario = Auth::user()->name;
                 $hist->save();
+
+                return back()->with('mensagem', 'Categoria Inativada com Sucesso!');
             } else {
                 $cat->ativo = true;
                 $cat->save();
@@ -243,6 +314,8 @@ class UserController extends Controller
                 $hist->codigo = $cat->id;
                 $hist->usuario = Auth::user()->name;
                 $hist->save();
+
+                return back()->with('mensagem', 'Categoria Ativada com Sucesso!');
             }
         }
         
@@ -270,7 +343,7 @@ class UserController extends Controller
         $hist->usuario = Auth::user()->name;
         $hist->save();
 
-        return back();
+        return back()->with('mensagem', 'Tipo de Animal Cadastrado com Sucesso!');
     }
 
     public function editarTipoAnimal(Request $request, $id)
@@ -289,7 +362,7 @@ class UserController extends Controller
             $tipo->save();
         }
 
-        return back();
+        return back()->with('mensagem', 'Tipo de Animal Alterado com Sucesso!');
     }
 
 
@@ -313,7 +386,7 @@ class UserController extends Controller
         $hist->usuario = Auth::user()->name;
         $hist->save();
 
-        return back();
+        return back()->with('mensagem', 'Marca Cadastrada com Sucesso!');
     }
 
     public function editarMarca(Request $request, $id)
@@ -332,7 +405,7 @@ class UserController extends Controller
             $marca->save();
         }
         
-        return back();
+        return back()->with('mensagem', 'Marca Alterada com Sucesso!');
     }
 
     public function apagarMarca($id)
@@ -350,6 +423,8 @@ class UserController extends Controller
                 $hist->codigo = $marca->id;
                 $hist->usuario = Auth::user()->name;
                 $hist->save();
+
+                return back()->with('mensagem', 'Marca Inativada com Sucesso!');
             } else {
                 $marca->ativo = true;
                 $marca->save();
@@ -360,6 +435,8 @@ class UserController extends Controller
                 $hist->codigo = $marca->id;
                 $hist->usuario = Auth::user()->name;
                 $hist->save();
+
+                return back()->with('mensagem', 'Marca Ativada com Sucesso!');
             }
             
         }
@@ -419,7 +496,7 @@ class UserController extends Controller
         $hist->codigo = $prod->id;
         $hist->usuario = Auth::user()->name;
         $hist->save();
-        return back();
+        return back()->with('mensagem', 'Produto Cadastrado com Sucesso!');
     }
 
     public function editarProduto(Request $request, $id)
@@ -469,7 +546,7 @@ class UserController extends Controller
             $prod->save();
         }
         
-        return back();
+        return back()->with('mensagem', 'Produto Alterado com Sucesso!');
     }
 
     public function apagarProduto($id)
@@ -487,6 +564,8 @@ class UserController extends Controller
                 $hist->codigo = $prod->id;
                 $hist->usuario = Auth::user()->name;
                 $hist->save();
+
+                return back()->with('mensagem', 'Produto Inativado com Sucesso!');
             } else {
                 $prod->ativo = true;
                 $prod->save();
@@ -497,6 +576,8 @@ class UserController extends Controller
                 $hist->codigo = $prod->id;
                 $hist->usuario = Auth::user()->name;
                 $hist->save();
+
+                return back()->with('mensagem', 'Produto Ativado com Sucesso!');
             }
         }
         
@@ -668,7 +749,7 @@ class UserController extends Controller
             }
         }
         
-        return back();
+        return back()->with('mensagem', 'Entrada no Produto efetuada com Sucesso!');
     }
 
     public function saidaEstoque(Request $request, $id)
@@ -700,7 +781,7 @@ class UserController extends Controller
             }
         }
         
-        return back();
+        return back()->with('mensagem', 'Saída no Produto efetuada com Sucesso!');
     }
 
     public function filtroEstoque(Request $request)
@@ -905,7 +986,7 @@ class UserController extends Controller
         $hist->codigo = $cliente->id;
         $hist->usuario = Auth::user()->name;
         $hist->save();
-        return back();
+        return back()->with('mensagem', 'Cliente Cadastrado com Sucesso!');
     }
 
     public function editarCliente(Request $request, $id)
@@ -933,7 +1014,7 @@ class UserController extends Controller
             $hist->save();
         }
         
-        return back();
+        return back()->with('mensagem', 'Cliente Alterado com Sucesso!');
     }
 
     public function filtroCliente(Request $request)
@@ -969,7 +1050,7 @@ class UserController extends Controller
         $hist->usuario = Auth::user()->name;
         $hist->save();
 
-        return back();
+        return back()->with('mensagem', 'Telefone Cadastrado com Sucesso!');
     }
 
     public function apagarTelefone($idCli, $idTel)
@@ -987,7 +1068,7 @@ class UserController extends Controller
         $hist->usuario = Auth::user()->name;
         $hist->save();
 
-        return back();
+        return back()->with('mensagem', 'Telefone Inativado com Sucesso!');
     }
 
 
@@ -1012,7 +1093,7 @@ class UserController extends Controller
         $hist->usuario = Auth::user()->name;
         $hist->save();
 
-        return back();
+        return back()->with('mensagem', 'Serviço Cadastrado com Sucesso!');
     }
 
     public function editarServico(Request $request, $id)
@@ -1032,7 +1113,7 @@ class UserController extends Controller
             $serv->save();
         }
 
-        return back();
+        return back()->with('mensagem', 'Serviço Alterado com Sucesso!');
     }
 
 
@@ -1061,7 +1142,7 @@ class UserController extends Controller
         $hist->usuario = Auth::user()->name;
         $hist->save();
 
-        return back();
+        return back()->with('mensagem', 'Raça Cadastrada com Sucesso!');
     }
 
     public function editarRaca(Request $request, $id)
@@ -1086,7 +1167,7 @@ class UserController extends Controller
             $raca->save();
         }
 
-        return back();
+        return back()->with('mensagem', 'Raça Alterada com Sucesso!');
     }
 
 
@@ -1112,7 +1193,7 @@ class UserController extends Controller
         $hist->usuario = Auth::user()->name;
         $hist->save();
 
-        return back();
+        return back()->with('mensagem', 'Plano Cadastrado com Sucesso!');
     }
 
     public function editarPlano(Request $request, $id)
@@ -1133,7 +1214,7 @@ class UserController extends Controller
             $plano->save();
         }
 
-        return back();
+        return back()->with('mensagem', 'Plano Alterado com Sucesso!');
     }
 
     public function apagarPlano($id)
@@ -1151,6 +1232,8 @@ class UserController extends Controller
                 $hist->codigo = $plano->id;
                 $hist->usuario = Auth::user()->name;
                 $hist->save();
+
+                return back()->with('mensagem', 'Plano Inativado com Sucesso!');
             } else {
                 $plano->ativo = true;
                 $plano->save();
@@ -1161,6 +1244,8 @@ class UserController extends Controller
                 $hist->codigo = $plano->id;
                 $hist->usuario = Auth::user()->name;
                 $hist->save();
+
+                return back()->with('mensagem', 'Plano Ativado com Sucesso!');
             }
         }
 
@@ -1192,7 +1277,9 @@ class UserController extends Controller
         $pgto = new PagamentoPlano();
         $pgto->pet_id = $id;
         $pgto->plano_id = $request->input('plano');
+        $pgto->forma_pagamento = $request->input('formaPagamento');
         $pgto->valorPago = $request->input('valor');
+        $pgto->observacao = $request->input('observacao');
         $pgto->save();
 
         $vendaServ = new VendaServico();
@@ -1228,7 +1315,7 @@ class UserController extends Controller
         $hist->usuario = Auth::user()->name;
         $hist->save();
 
-        return back();
+        return back()->with('mensagem', 'Plano Pago com Sucesso!');
     }
 
     public function trocarPlano(Request $request, $id)
@@ -1239,13 +1326,13 @@ class UserController extends Controller
         $pet->save();
 
         $hist = new Historico();
-        $hist->acao = "Mudou o Plano";
+        $hist->acao = "Mudou Plano";
         $hist->referencia = "Pet";
         $hist->codigo = $pet->id;
         $hist->usuario = Auth::user()->name;
         $hist->save();
 
-        return back();
+        return back()->with('mensagem', 'Plano Alterado com Sucesso!');
     }
 
     public function reativarPlano(Request $request, $id)
@@ -1258,13 +1345,13 @@ class UserController extends Controller
         $pet->save();
 
         $hist = new Historico();
-        $hist->acao = "Reativou o Plano";
+        $hist->acao = "Reativou Plano";
         $hist->referencia = "Pet";
         $hist->codigo = $pet->id;
         $hist->usuario = Auth::user()->name;
         $hist->save();
 
-        return back();
+        return back()->with('mensagem', 'Plano Reativado com Sucesso!');
     }
 
     public function cancelarPlano($id)
@@ -1286,7 +1373,7 @@ class UserController extends Controller
             $hist->save();
         }
 
-        return back();
+        return back()->with('mensagem', 'Plano Cancelado com Sucesso!');
     }
 
     public function cadastrarPet(Request $request)
@@ -1335,7 +1422,7 @@ class UserController extends Controller
         $hist->usuario = Auth::user()->name;
         $hist->save();
 
-        return back();
+        return back()->with('mensagem', 'Pet Cadastrado com Sucesso!');
     }
 
     public function editarPet(Request $request, $id)
@@ -1392,27 +1479,7 @@ class UserController extends Controller
             $pet->save();
         }
 
-        return back();
-    }
-
-    public function apagarPet($id)
-    {
-        $pet = Pet::find($id);
-
-        $hist = new Historico();
-        $hist->acao = "Inativou";
-        $hist->referencia = "Pet";
-        $hist->codigo = $pet->id;
-        $hist->usuario = Auth::user()->name;
-        $hist->save();
-
-        if(isset($pet)){
-            Storage::disk('public')->delete($pet->foto);
-            $pet->ativo = false;
-            $pet->save();
-        }
-
-        return back();
+        return back()->with('mensagem', 'Pet Alterado com Sucesso!');
     }
 
     public function filtroPet(Request $request)
@@ -1461,10 +1528,34 @@ class UserController extends Controller
     public function indexVendaServicos()
     {
         $view = "inicial";
+        $formas = DB::table('venda_servicos')->select(DB::raw("forma_pagamento"))->groupBy('forma_pagamento')->get();
         $pets = Pet::orderBy('nome')->get();
         $servs = Servico::orderBy('nome')->get();
         $vendaServs = VendaServico::orderBy('created_at', 'desc')->paginate(20);
-        return view('vendas.venda_servicos',compact('view','pets','servs','vendaServs'));
+        return view('vendas.venda_servicos',compact('view','formas','pets','servs','vendaServs'));
+    }
+
+    public function indexVendaServicosDia()
+    {
+        $data = date("Y-m-d");
+        $view = "inicial";
+        $formas = DB::table('venda_servicos')->select(DB::raw("forma_pagamento"))->groupBy('forma_pagamento')->get();
+        $pets = Pet::orderBy('nome')->get();
+        $servs = Servico::orderBy('nome')->get();
+        $vendaServs = VendaServico::whereBetween('created_at',["$data"." 00:00", "$data"." 23:59"])->orderBy('created_at', 'desc')->paginate(20);
+        return view('vendas.venda_servicos',compact('view','formas','pets','servs','vendaServs'));
+    }
+
+    public function indexVendaServicosDiaAnterior()
+    {
+        $data = date("Y-m-d");
+        $diaAnterior = date('Y-m-d', strtotime($data. ' - 1 days'));
+        $view = "inicial";
+        $formas = DB::table('venda_servicos')->select(DB::raw("forma_pagamento"))->groupBy('forma_pagamento')->get();
+        $pets = Pet::orderBy('nome')->get();
+        $servs = Servico::orderBy('nome')->get();
+        $vendaServs = VendaServico::whereBetween('created_at',["$diaAnterior"." 00:00", "$diaAnterior"." 23:59"])->orderBy('created_at', 'desc')->paginate(20);
+        return view('vendas.venda_servicos',compact('view','formas','pets','servs','vendaServs'));
     }
 
     public function cadastrarVendaServico(Request $request)
@@ -1507,7 +1598,7 @@ class UserController extends Controller
         $hist->usuario = Auth::user()->name;
         $hist->save();
 
-        return back();
+        return back()->with('mensagem', 'Venda de Serviço Cadastrada com Sucesso!');
     }
 
     public function apagarVendaServico($id)
@@ -1534,7 +1625,7 @@ class UserController extends Controller
             $vendaServ->delete();
         }
 
-        return back();
+        return back()->with('mensagem', 'Venda de Serviço Excluída com Sucesso!');
     }
 
     public function filtroVendaServico(Request $request)
@@ -1542,39 +1633,141 @@ class UserController extends Controller
         $servico = $request->input('servico');
         $pet = $request->input('pet');
         $formaPagamento = $request->input('formaPagamento');
-        if(isset($formaPagamento)){
-            if(isset($servico)){
-                if(isset($pet)){
-                    $vendaServs = VendaServico::where('nome','like',"%$formaPagamento%")->where('servico_id',"$servico")->where('pet_id',"$pet")->orderBy('created_at', 'desc')->paginate(50);
+        $dataInicio = $request->input('dataInicio');
+        $dataFim = $request->input('dataFim');
+        if(isset($servico)){
+            if(isset($pet)){
+                if(isset($formaPagamento)){
+                    if(isset($dataInicio)){
+                        if(isset($dataFim)){
+                            $vendaServs = VendaServico::where('servico_id',"$servico")->where('pet_id',"$pet")->where('pet_id',"$pet")->where('forma_pagamento','like',"%$formaPagamento%")->whereBetween('created_at',["$dataInicio"." 00:00", "$dataFim"." 23:59"])->paginate(100);
+                        } else {
+                            $vendaServs = VendaServico::where('servico_id',"$servico")->where('pet_id',"$pet")->where('forma_pagamento','like',"%$formaPagamento%")->whereBetween('created_at',["$dataInicio"." 00:00", date("Y/m/d")." 23:59"])->paginate(100);
+                        }
+                    } else {
+                        if(isset($dataFim)){
+                            $vendaServs = VendaServico::where('servico_id',"$servico")->where('pet_id',"$pet")->where('forma_pagamento','like',"%$formaPagamento%")->whereBetween('created_at',["", "$dataFim"." 23:59"])->paginate(100);
+                        } else {
+                            $vendaServs = VendaServico::where('servico_id',"$servico")->where('pet_id',"$pet")->where('forma_pagamento','like',"%$formaPagamento%")->paginate(100);
+                        }
+                    }
                 } else {
-                    $vendaServs = VendaServico::where('nome','like',"%$formaPagamento%")->where('servico_id',"$servico")->orderBy('created_at', 'desc')->paginate(50); 
+                    if(isset($dataInicio)){
+                        if(isset($dataFim)){
+                            $vendaServs = VendaServico::where('servico_id',"$servico")->where('pet_id',"$pet")->whereBetween('created_at',["$dataInicio"." 00:00", "$dataFim"." 23:59"])->paginate(100);
+                        } else {
+                            $vendaServs = VendaServico::where('servico_id',"$servico")->where('pet_id',"$pet")->whereBetween('created_at',["$dataInicio"." 00:00", date("Y/m/d")])->paginate(100);
+                        }
+                    } else {
+                        if(isset($dataFim)){
+                            $vendaServs = VendaServico::where('servico_id',"$servico")->where('pet_id',"$pet")->whereBetween('created_at',["", "$dataFim"." 23:59"])->paginate(100);
+                        } else {
+                            $vendaServs = VendaServico::where('servico_id',"$servico")->where('pet_id',"$pet")->paginate(100);
+                        }
+                    }
                 }
             } else {
-                if(isset($pet)){
-                    $vendaServs = VendaServico::where('nome','like',"%$formaPagamento%")->where('pet_id',"$pet")->orderBy('created_at', 'desc')->paginate(50);
+                if(isset($formaPagamento)){
+                    if(isset($dataInicio)){
+                        if(isset($dataFim)){
+                            $vendaServs = VendaServico::where('servico_id',"$servico")->where('forma_pagamento','like',"%$formaPagamento%")->whereBetween('created_at',["$dataInicio"." 00:00", "$dataFim"." 23:59"])->paginate(100);
+                        } else {
+                            $vendaServs = VendaServico::where('servico_id',"$servico")->where('forma_pagamento','like',"%$formaPagamento%")->whereBetween('created_at',["$dataInicio"." 00:00", date("Y/m/d")])->paginate(100);
+                        }
+                    } else {
+                        if(isset($dataFim)){
+                            $vendaServs = VendaServico::where('servico_id',"$servico")->where('forma_pagamento','like',"%$formaPagamento%")->whereBetween('created_at',["", "$dataFim"." 23:59"])->paginate(100);
+                        } else {
+                            $vendaServs = VendaServico::where('servico_id',"$servico")->where('forma_pagamento','like',"%$formaPagamento%")->paginate(100);
+                        }
+                    }
                 } else {
-                    $vendaServs = VendaServico::where('nome','like',"%$formaPagamento%")->orderBy('created_at', 'desc')->paginate(50);
+                    if(isset($dataInicio)){
+                        if(isset($dataFim)){
+                            $vendaServs = VendaServico::where('servico_id',"$servico")->whereBetween('created_at',["$dataInicio"." 00:00", "$dataFim"." 23:59"])->paginate(100);
+                        } else {
+                            $vendaServs = VendaServico::where('servico_id',"$servico")->whereBetween('created_at',["$dataInicio"." 00:00", date("Y/m/d")." 23:59"])->paginate(100);
+                        }
+                    } else {
+                        if(isset($dataFim)){
+                            $vendaServs = VendaServico::where('servico_id',"$servico")->whereBetween('created_at',["", "$dataFim"." 23:59"])->paginate(100);
+                        } else {
+                            $vendaServs = VendaServico::where('servico_id',"$servico")->paginate(100);
+                        }
+                    }
                 }
             }
         } else {
-            if(isset($servico)){
-                if(isset($pet)){
-                    $vendaServs = VendaServico::where('servico_id',"$servico")->where('pet_id',"$pet")->orderBy('created_at', 'desc')->paginate(50);
+            if(isset($pet)){
+                if(isset($formaPagamento)){
+                    if(isset($dataInicio)){
+                        if(isset($dataFim)){
+                            $vendaServs = VendaServico::where('pet_id',"$pet")->where('pet_id',"$pet")->where('forma_pagamento','like',"%$formaPagamento%")->whereBetween('created_at',["$dataInicio"." 00:00", "$dataFim"." 23:59"])->paginate(100);
+                        } else {
+                            $vendaServs = VendaServico::where('pet_id',"$pet")->where('forma_pagamento','like',"%$formaPagamento%")->whereBetween('created_at',["$dataInicio"." 00:00", date("Y/m/d")." 23:59"])->paginate(100);
+                        }
+                    } else {
+                        if(isset($dataFim)){
+                            $vendaServs = VendaServico::where('pet_id',"$pet")->where('forma_pagamento','like',"%$formaPagamento%")->whereBetween('created_at',["", "$dataFim"." 23:59"])->paginate(100);
+                        } else {
+                            $vendaServs = VendaServico::where('pet_id',"$pet")->where('forma_pagamento','like',"%$formaPagamento%")->paginate(100);
+                        }
+                    }
                 } else {
-                    $vendaServs = VendaServico::where('servico_id',"$servico")->orderBy('created_at', 'desc')->paginate(50); 
+                    if(isset($dataInicio)){
+                        if(isset($dataFim)){
+                            $vendaServs = VendaServico::where('pet_id',"$pet")->whereBetween('created_at',["$dataInicio"." 00:00", "$dataFim"." 23:59"])->paginate(100);
+                        } else {
+                            $vendaServs = VendaServico::where('pet_id',"$pet")->whereBetween('created_at',["$dataInicio"." 00:00", date("Y/m/d")])->paginate(100);
+                        }
+                    } else {
+                        if(isset($dataFim)){
+                            $vendaServs = VendaServico::where('pet_id',"$pet")->whereBetween('created_at',["", "$dataFim"." 23:59"])->paginate(100);
+                        } else {
+                            $vendaServs = VendaServico::where('pet_id',"$pet")->paginate(100);
+                        }
+                    }
                 }
             } else {
-                if(isset($pet)){
-                    $vendaServs = VendaServico::where('pet_id',"$pet")->orderBy('created_at', 'desc')->paginate(50);
+                if(isset($formaPagamento)){
+                    if(isset($dataInicio)){
+                        if(isset($dataFim)){
+                            $vendaServs = VendaServico::where('forma_pagamento','like',"%$formaPagamento%")->whereBetween('created_at',["$dataInicio"." 00:00", "$dataFim"." 23:59"])->paginate(100);
+                        } else {
+                            $vendaServs = VendaServico::where('forma_pagamento','like',"%$formaPagamento%")->whereBetween('created_at',["$dataInicio"." 00:00", date("Y/m/d")])->paginate(100);
+                        }
+                    } else {
+                        if(isset($dataFim)){
+                            $vendaServs = VendaServico::where('forma_pagamento','like',"%$formaPagamento%")->whereBetween('created_at',["", "$dataFim"." 23:59"])->paginate(100);
+                        } else {
+                            $vendaServs = VendaServico::where('forma_pagamento','like',"%$formaPagamento%")->paginate(100);
+                        }
+                    }
                 } else {
-                    return redirect('/vendas/servicos');
+                    if(isset($dataInicio)){
+                        if(isset($dataFim)){
+                            $vendaServs = VendaServico::whereBetween('created_at',["$dataInicio"." 00:00", "$dataFim"." 23:59"])->paginate(100);
+                        } else {
+                            $vendaServs = VendaServico::whereBetween('created_at',["$dataInicio"." 00:00", date("Y/m/d")." 23:59"])->paginate(100);
+                        }
+                    } else {
+                        if(isset($dataFim)){
+                            $vendaServs = VendaServico::whereBetween('created_at',["", "$dataFim"." 23:59"])->paginate(100);
+                        } else {
+                            return redirect('/vendas/servicos');
+                        }
+                    }
                 }
             }
         }
         $view = "filtro";
+        $formas = DB::table('venda_servicos')->select(DB::raw("forma_pagamento"))->groupBy('forma_pagamento')->get();
+        $total_valor = $vendaServs->sum('valor');
+        $total_desconto = $vendaServs->sum('desconto');
+        $total_geral = $total_valor - $total_desconto;
         $pets = Pet::orderBy('nome')->get();
         $servs = Servico::orderBy('nome')->get();
-        return view('vendas.venda_servicos',compact('view','vendaServs','pets','servs'));
+        return view('vendas.venda_servicos',compact('view','formas','total_valor','total_desconto','total_geral','vendaServs','pets','servs'));
     }
 
     
@@ -1582,10 +1775,34 @@ class UserController extends Controller
     public function indexVendaProdutos()
     {
         $view = "inicial";
+        $formas = DB::table('venda_produtos')->select(DB::raw("forma_pagamento"))->groupBy('forma_pagamento')->get();
         $clientes = Cliente::orderBy('nome')->get();
         $produtos = Produto::orderBy('nome')->get();
         $vendaProds = VendaProduto::orderBy('created_at', 'desc')->paginate(20);
-        return view('vendas.venda_produtos',compact('view','clientes','produtos','vendaProds'));
+        return view('vendas.venda_produtos',compact('view','formas','clientes','produtos','vendaProds'));
+    }
+
+    public function indexVendaProdutosDia()
+    {
+        $data = date("Y-m-d");
+        $view = "inicial";
+        $formas = DB::table('venda_produtos')->select(DB::raw("forma_pagamento"))->groupBy('forma_pagamento')->get();
+        $clientes = Cliente::orderBy('nome')->get();
+        $produtos = Produto::orderBy('nome')->get();
+        $vendaProds = VendaProduto::whereBetween('created_at',["$data"." 00:00", "$data"." 23:59"])->orderBy('created_at', 'desc')->paginate(20);
+        return view('vendas.venda_produtos',compact('view','formas','clientes','produtos','vendaProds'));
+    }
+
+    public function indexVendaProdutosDiaAnterior()
+    {
+        $data = date("Y-m-d");
+        $diaAnterior = date('Y-m-d', strtotime($data. ' - 1 days'));
+        $view = "inicial";
+        $formas = DB::table('venda_produtos')->select(DB::raw("forma_pagamento"))->groupBy('forma_pagamento')->get();
+        $clientes = Cliente::orderBy('nome')->get();
+        $produtos = Produto::orderBy('nome')->get();
+        $vendaProds = VendaProduto::whereBetween('created_at',["$diaAnterior"." 00:00", "$diaAnterior"." 23:59"])->orderBy('created_at', 'desc')->paginate(20);
+        return view('vendas.venda_produtos',compact('view','formas','clientes','produtos','vendaProds'));
     }
 
     public function cadastrarVendaProduto(Request $request)
@@ -1641,7 +1858,7 @@ class UserController extends Controller
         $hist->usuario = Auth::user()->name;
         $hist->save();
 
-        return back();
+        return back()->with('mensagem', 'Venda de Produto Cadastrada com Sucesso!');
     }
 
     public function apagarVendaProduto($id)
@@ -1668,7 +1885,7 @@ class UserController extends Controller
             $vendaProd->delete();
         }
 
-        return back();
+        return back()->with('mensagem', 'Venda de Produto Excluída com Sucesso!');
     }
 
     public function filtroVendaProduto(Request $request)
@@ -1676,39 +1893,141 @@ class UserController extends Controller
         $produto = $request->input('produto');
         $cliente = $request->input('cliente');
         $formaPagamento = $request->input('formaPagamento');
-        if(isset($formaPagamento)){
-            if(isset($produto)){
-                if(isset($cliente)){
-                    $vendaProds = VendaProduto::where('nome','like',"%$formaPagamento%")->where('produto_id',"$produto")->where('cliente_id',"$cliente")->orderBy('created_at', 'desc')->paginate(50);
+        $dataInicio = $request->input('dataInicio');
+        $dataFim = $request->input('dataFim');
+        if(isset($produto)){
+            if(isset($cliente)){
+                if(isset($formaPagamento)){
+                    if(isset($dataInicio)){
+                        if(isset($dataFim)){
+                            $vendaProds = VendaProduto::where('produto_id',"$produto")->where('cliente_id',"$cliente")->where('cliente_id',"$cliente")->where('forma_pagamento','like',"%$formaPagamento%")->whereBetween('created_at',["$dataInicio"." 00:00", "$dataFim"." 23:59"])->paginate(100);
+                        } else {
+                            $vendaProds = VendaProduto::where('produto_id',"$produto")->where('cliente_id',"$cliente")->where('forma_pagamento','like',"%$formaPagamento%")->whereBetween('created_at',["$dataInicio"." 00:00", date("Y/m/d")." 23:59"])->paginate(100);
+                        }
+                    } else {
+                        if(isset($dataFim)){
+                            $vendaProds = VendaProduto::where('produto_id',"$produto")->where('cliente_id',"$cliente")->where('forma_pagamento','like',"%$formaPagamento%")->whereBetween('created_at',["", "$dataFim"." 23:59"])->paginate(100);
+                        } else {
+                            $vendaProds = VendaProduto::where('produto_id',"$produto")->where('cliente_id',"$cliente")->where('forma_pagamento','like',"%$formaPagamento%")->paginate(100);
+                        }
+                    }
                 } else {
-                    $vendaProds = VendaProduto::where('nome','like',"%$formaPagamento%")->where('produto_id',"$produto")->orderBy('created_at', 'desc')->paginate(50); 
+                    if(isset($dataInicio)){
+                        if(isset($dataFim)){
+                            $vendaProds = VendaProduto::where('produto_id',"$produto")->where('cliente_id',"$cliente")->whereBetween('created_at',["$dataInicio"." 00:00", "$dataFim"." 23:59"])->paginate(100);
+                        } else {
+                            $vendaProds = VendaProduto::where('produto_id',"$produto")->where('cliente_id',"$cliente")->whereBetween('created_at',["$dataInicio"." 00:00", date("Y/m/d")])->paginate(100);
+                        }
+                    } else {
+                        if(isset($dataFim)){
+                            $vendaProds = VendaProduto::where('produto_id',"$produto")->where('cliente_id',"$cliente")->whereBetween('created_at',["", "$dataFim"." 23:59"])->paginate(100);
+                        } else {
+                            $vendaProds = VendaProduto::where('produto_id',"$produto")->where('cliente_id',"$cliente")->paginate(100);
+                        }
+                    }
                 }
             } else {
-                if(isset($cliente)){
-                    $vendaProds = VendaProduto::where('nome','like',"%$formaPagamento%")->where('cliente_id',"$cliente")->orderBy('created_at', 'desc')->paginate(50);
+                if(isset($formaPagamento)){
+                    if(isset($dataInicio)){
+                        if(isset($dataFim)){
+                            $vendaProds = VendaProduto::where('produto_id',"$produto")->where('forma_pagamento','like',"%$formaPagamento%")->whereBetween('created_at',["$dataInicio"." 00:00", "$dataFim"." 23:59"])->paginate(100);
+                        } else {
+                            $vendaProds = VendaProduto::where('produto_id',"$produto")->where('forma_pagamento','like',"%$formaPagamento%")->whereBetween('created_at',["$dataInicio"." 00:00", date("Y/m/d")])->paginate(100);
+                        }
+                    } else {
+                        if(isset($dataFim)){
+                            $vendaProds = VendaProduto::where('produto_id',"$produto")->where('forma_pagamento','like',"%$formaPagamento%")->whereBetween('created_at',["", "$dataFim"." 23:59"])->paginate(100);
+                        } else {
+                            $vendaProds = VendaProduto::where('produto_id',"$produto")->where('forma_pagamento','like',"%$formaPagamento%")->paginate(100);
+                        }
+                    }
                 } else {
-                    $vendaProds = VendaProduto::where('nome','like',"%$formaPagamento%")->orderBy('created_at', 'desc')->paginate(50);
+                    if(isset($dataInicio)){
+                        if(isset($dataFim)){
+                            $vendaProds = VendaProduto::where('produto_id',"$produto")->whereBetween('created_at',["$dataInicio"." 00:00", "$dataFim"." 23:59"])->paginate(100);
+                        } else {
+                            $vendaProds = VendaProduto::where('produto_id',"$produto")->whereBetween('created_at',["$dataInicio"." 00:00", date("Y/m/d")." 23:59"])->paginate(100);
+                        }
+                    } else {
+                        if(isset($dataFim)){
+                            $vendaProds = VendaProduto::where('produto_id',"$produto")->whereBetween('created_at',["", "$dataFim"." 23:59"])->paginate(100);
+                        } else {
+                            $vendaProds = VendaProduto::where('produto_id',"$produto")->paginate(100);
+                        }
+                    }
                 }
             }
         } else {
-            if(isset($produto)){
-                if(isset($cliente)){
-                    $vendaProds = VendaProduto::where('produto_id',"$produto")->where('cliente_id',"$cliente")->orderBy('created_at', 'desc')->paginate(50);
+            if(isset($cliente)){
+                if(isset($formaPagamento)){
+                    if(isset($dataInicio)){
+                        if(isset($dataFim)){
+                            $vendaProds = VendaProduto::where('cliente_id',"$cliente")->where('cliente_id',"$cliente")->where('forma_pagamento','like',"%$formaPagamento%")->whereBetween('created_at',["$dataInicio"." 00:00", "$dataFim"." 23:59"])->paginate(100);
+                        } else {
+                            $vendaProds = VendaProduto::where('cliente_id',"$cliente")->where('forma_pagamento','like',"%$formaPagamento%")->whereBetween('created_at',["$dataInicio"." 00:00", date("Y/m/d")." 23:59"])->paginate(100);
+                        }
+                    } else {
+                        if(isset($dataFim)){
+                            $vendaProds = VendaProduto::where('cliente_id',"$cliente")->where('forma_pagamento','like',"%$formaPagamento%")->whereBetween('created_at',["", "$dataFim"." 23:59"])->paginate(100);
+                        } else {
+                            $vendaProds = VendaProduto::where('cliente_id',"$cliente")->where('forma_pagamento','like',"%$formaPagamento%")->paginate(100);
+                        }
+                    }
                 } else {
-                    $vendaProds = VendaProduto::where('produto_id',"$produto")->orderBy('created_at', 'desc')->paginate(50); 
+                    if(isset($dataInicio)){
+                        if(isset($dataFim)){
+                            $vendaProds = VendaProduto::where('cliente_id',"$cliente")->whereBetween('created_at',["$dataInicio"." 00:00", "$dataFim"." 23:59"])->paginate(100);
+                        } else {
+                            $vendaProds = VendaProduto::where('cliente_id',"$cliente")->whereBetween('created_at',["$dataInicio"." 00:00", date("Y/m/d")])->paginate(100);
+                        }
+                    } else {
+                        if(isset($dataFim)){
+                            $vendaProds = VendaProduto::where('cliente_id',"$cliente")->whereBetween('created_at',["", "$dataFim"." 23:59"])->paginate(100);
+                        } else {
+                            $vendaProds = VendaProduto::where('cliente_id',"$cliente")->paginate(100);
+                        }
+                    }
                 }
             } else {
-                if(isset($cliente)){
-                    $vendaProds = VendaProduto::where('cliente_id',"$cliente")->orderBy('created_at', 'desc')->paginate(50);
+                if(isset($formaPagamento)){
+                    if(isset($dataInicio)){
+                        if(isset($dataFim)){
+                            $vendaProds = VendaProduto::where('forma_pagamento','like',"%$formaPagamento%")->whereBetween('created_at',["$dataInicio"." 00:00", "$dataFim"." 23:59"])->paginate(100);
+                        } else {
+                            $vendaProds = VendaProduto::where('forma_pagamento','like',"%$formaPagamento%")->whereBetween('created_at',["$dataInicio"." 00:00", date("Y/m/d")])->paginate(100);
+                        }
+                    } else {
+                        if(isset($dataFim)){
+                            $vendaProds = VendaProduto::where('forma_pagamento','like',"%$formaPagamento%")->whereBetween('created_at',["", "$dataFim"." 23:59"])->paginate(100);
+                        } else {
+                            $vendaProds = VendaProduto::where('forma_pagamento','like',"%$formaPagamento%")->paginate(100);
+                        }
+                    }
                 } else {
-                    return redirect('/vendas/produtos');
+                    if(isset($dataInicio)){
+                        if(isset($dataFim)){
+                            $vendaProds = VendaProduto::whereBetween('created_at',["$dataInicio"." 00:00", "$dataFim"." 23:59"])->paginate(100);
+                        } else {
+                            $vendaProds = VendaProduto::whereBetween('created_at',["$dataInicio"." 00:00", date("Y/m/d")." 23:59"])->paginate(100);
+                        }
+                    } else {
+                        if(isset($dataFim)){
+                            $vendaProds = VendaProduto::whereBetween('created_at',["", "$dataFim"." 23:59"])->paginate(100);
+                        } else {
+                            return redirect('/vendas/produtos');
+                        }
+                    }
                 }
             }
         }
+        $total_valor = $vendaProds->sum('valor');
+        $total_desconto = $vendaProds->sum('desconto');
+        $total_geral = $total_valor - $total_desconto;
         $view = "filtro";
+        $formas = DB::table('venda_produtos')->select(DB::raw("forma_pagamento"))->groupBy('forma_pagamento')->get();
         $clientes = Cliente::orderBy('nome')->get();
         $produtos = Produto::orderBy('nome')->get();
-        return view('vendas.venda_produtos',compact('view','vendaProds','clientes','produtos'));
+        return view('vendas.venda_produtos',compact('view','formas','total_valor','total_desconto','total_geral','vendaProds','clientes','produtos'));
     }
 
 
@@ -1742,7 +2061,7 @@ class UserController extends Controller
         $hist->usuario = Auth::user()->name;
         $hist->save();
 
-        return back();
+        return back()->with('mensagem', 'Depósito efetuado com Sucesso!');
     }
 
     public function retiradaLancamento(Request $request)
@@ -1765,7 +2084,7 @@ class UserController extends Controller
         $hist->usuario = Auth::user()->name;
         $hist->save();
 
-        return back();
+        return back()->with('mensagem', 'Retirada efetuada com Sucesso!');
     }
 
     public function filtroLancamento(Request $request)
@@ -1939,7 +2258,7 @@ class UserController extends Controller
             $hist->save();
         }
 
-        return back();
+        return back()->with('mensagem', 'Despesa Cadastrada com Sucesso!');
     }
 
     public function pagarDespesa(Request $request, $id)
@@ -1984,7 +2303,7 @@ class UserController extends Controller
             $hist->save();
         }
 
-        return back();
+        return back()->with('mensagem', 'Despesa Paga com Sucesso!');
     }
 
     public function editarDespesa(Request $request, $id)
@@ -2006,7 +2325,7 @@ class UserController extends Controller
             $desp->save();
         }
 
-        return back();
+        return back()->with('mensagem', 'Despesa Alterada com Sucesso!');
     }
 
     public function apagarDespesa($id)
@@ -2024,7 +2343,7 @@ class UserController extends Controller
             $desp->delete();
         }
 
-        return back();
+        return back()->with('mensagem', 'Despesa Excluída com Sucesso!');
     }
 
     public function filtroDespesa(Request $request)
@@ -2105,4 +2424,267 @@ class UserController extends Controller
         $view = "filtro";
         return view('despesas.lancamentos',compact('view','valorTotal','despesas'));
     }
+
+    //AGENDAMENTOS
+    public function indexAgendamentos()
+    {
+        $dataAtual = date("Y-m-d");
+        $dataSemana = date('Y-m-d', strtotime($dataAtual. ' + 7 days'));
+        $pets = Pet::orderBy('nome')->get();
+        $servs = Servico::orderBy('nome')->get();
+        $agends = Agendamento::whereBetween('data',["$dataAtual", "$dataSemana"])->orderBy('data')->get();
+        return view('agendamentos.agendamentos',compact('dataAtual','pets','servs','agends'));
+    }
+
+    public function novoAgendamento($data, $hora)
+    {
+        $pets = Pet::orderBy('nome')->get();
+        $servs = Servico::orderBy('nome')->get();
+        return view('agendamentos.novo_agendamento',compact('data','hora','pets','servs'));
+    }
+
+    public function cadastrarAgendamento(Request $request)
+    {
+        $agend = new Agendamento();
+        if($request->input('data')!=""){
+            $agend->data = $request->input('data');
+        }
+        if($request->input('hora')!=""){
+            $agend->hora = $request->input('hora');
+        }
+        if($request->input('servico')!=""){
+            $agend->servico_id = $request->input('servico');
+        }
+        if($request->input('valor')!=""){
+            $agend->valor = $request->input('valor');
+        }
+        if($request->input('petCadastrado')!=""){
+            $agend->pet_cadastrado = $request->input('petCadastrado');
+        }
+        if($request->input('pet')!=""){
+            $agend->pet_id = $request->input('pet');
+        }
+        if($request->input('nomeCliente')!=""){
+            $agend->nome_cliente = $request->input('nomeCliente');
+        }
+        if($request->input('nomePet')!=""){
+            $agend->nome_pet = $request->input('nomePet');
+        }
+        if($request->input('telefone')!=""){
+            $agend->telefone = $request->input('telefone');
+        }
+        if($request->input('petCadastrado')==1){
+            if($request->input('buscar1')!=""){
+                $agend->buscar = $request->input('buscar1');
+            }
+        } else {
+            if($request->input('buscar0')!=""){
+                $agend->buscar = $request->input('buscar0');
+            }
+        }
+        if($request->input('cep')!=""){
+            $agend->cep = $request->input('cep');
+        }
+        if($request->input('rua')!=""){
+            $agend->rua = $request->input('rua');
+        }
+        if($request->input('numero')!=""){
+            $agend->numero = $request->input('numero');
+        }
+        if($request->input('complemento')!=""){
+            $agend->complemento = $request->input('complemento');
+        }
+        if($request->input('bairro')!=""){
+            $agend->bairro = $request->input('bairro');
+        }
+        if($request->input('cidade')!=""){
+            $agend->cidade = $request->input('cidade');
+        }
+        if($request->input('uf')!=""){
+            $agend->uf = $request->input('uf');
+        }
+        $agend->status = "PENDENTE"; 
+        $agend->save();
+
+        $hist = new Historico();
+        $hist->acao = "Cadastrou";
+        $hist->referencia = "Agendamento";
+        $hist->codigo = $agend->id;
+        $hist->usuario = Auth::user()->name;
+        $hist->save();
+
+        return redirect("/agendamentos")->with('mensagem', 'Agendamento Cadastrado com Sucesso!');
+    }
+
+    public function atendidoAgendamento($id)
+    {
+        $agend = Agendamento::find($id);
+
+        if(isset($agend)){
+            $agend->status = "ATENDIDO";
+            $agend->save();
+
+            $hist = new Historico();
+            $hist->acao = "Atendeu";
+            $hist->referencia = "Agendamento";
+            $hist->codigo = $agend->id;
+            $hist->usuario = Auth::user()->name;
+            $hist->save();
+        }
+
+        return back()->with('mensagem', 'Agendamento Atendido com Sucesso!');
+    }
+
+    public function cancelarAgendamento($id)
+    {
+        $agend = Agendamento::find($id);
+
+        if(isset($agend)){
+            $agend->status = "CANCELADO";
+            $agend->save();
+
+            $hist = new Historico();
+            $hist->acao = "Cancelou";
+            $hist->referencia = "Agendamento";
+            $hist->codigo = $agend->id;
+            $hist->usuario = Auth::user()->name;
+            $hist->save();
+        }
+
+        return back()->with('mensagem', 'Agendamento Cancelado com Sucesso!');
+    }
+
+    public function filtroAgendamento(Request $request)
+    {
+        $dataAtual = $request->input('data');
+        $dataSemana = date('Y-m-d', strtotime($dataAtual. ' + 7 days'));
+        $pets = Pet::orderBy('nome')->get();
+        $servs = Servico::orderBy('nome')->get();
+        $agends = Agendamento::whereBetween('data',["$dataAtual", "$dataSemana"])->orderBy('data')->get();
+        return view('agendamentos.agendamentos',compact('dataAtual','pets','servs','agends'));
+    }
+
+
+    //USUÁRIOS
+    public function indexUsuarios()
+    {
+        $view = "inicial";
+        $users = User::orderBy('name')->paginate(10);
+        return view('cadastros.usuarios', compact('view','users'));
+    }
+
+    public function cadastrarUsuario(Request $request)
+    {
+        $request->validate([
+            'email' => 'unique:users',
+            'password' => 'min:8',
+        ], $mensagens =[
+            'email.unique' => 'Já existe um usuário com esse login!',
+            'password.min' => 'A senha deve conter no mínimo 8 caracteres!',
+        ]);
+
+        $user = new User();
+        $user->name = $request->input('name');
+        $user->email = $request->input('email');
+        $user->password = Hash::make($request->input('password'));
+        if($request->file('foto')!=""){
+        $path = $request->file('foto')->store('fotos_perfil','public');
+            $user->foto = $path;
+        }
+        $user->save();
+
+        $hist = new Historico();
+        $hist->acao = "Cadastrou";
+        $hist->referencia = "Usuário";
+        $hist->codigo = $user->id;
+        $hist->usuario = Auth::user()->name;
+        $hist->save();
+
+        return back()->with('mensagem', 'Usuário Cadastrado com Sucesso!');
+    }
+
+    public function filtroUsuario(Request $request)
+    {
+        $nome = $request->input('nome');
+        $turma = $request->input('turma');
+        if(isset($nome)){
+            if(isset($turma)){
+                $users = User::where('ativo',true)->where('name','like',"%$nome%")->where('turma_id',"$turma")->orderBy('name')->paginate(50);
+            } else {
+                $users = User::where('ativo',true)->where('name','like',"%$nome%")->orderBy('name')->paginate(50);
+            }
+        } else {
+            if(isset($turma)){
+                $users = User::where('ativo',true)->where('turma_id',"$turma")->orderBy('name')->paginate(50);
+            } else {
+                return redirect('/usuarios');
+            }
+        }
+        $view = "filtro";
+        return view('cadastros.usuarios', compact('view','users'));
+    }
+
+    public function editarUsuario(Request $request, $id)
+    {
+        $user = User::find($id);
+        if(isset($user)){
+            $user->name =$request->input('name');
+            $user->email =$request->input('email');
+            if($request->input('password')!=""){
+            $user->password = Hash::make($request->input('password'));
+            }
+            if($request->file('foto')!=""){
+                Storage::disk('public')->delete($user->foto);
+                $path = $request->file('foto')->store('fotos_perfil','public');
+                $user->foto = $path;
+            }
+            $user->save();
+
+            $hist = new Historico();
+            $hist->acao = "Alterou";
+            $hist->referencia = "Usuário";
+            $hist->codigo = $user->id;
+            $hist->usuario = Auth::user()->name;
+            $hist->save();
+
+            return back()->with('mensagem', 'Usuário Alterado com Sucesso!');
+        }
+        return back();
+    }
+
+    public function apagarUsuario($id)
+    {
+        $user = User::find($id);
+
+        if(isset($user)){
+            if($user->ativo==1){
+                $user->ativo = false;
+                $user->save();
+
+                $hist = new Historico();
+                $hist->acao = "Inativou";
+                $hist->referencia = "Usuário";
+                $hist->codigo = $user->id;
+                $hist->usuario = Auth::user()->name;
+                $hist->save();
+
+                return back()->with('mensagem', 'Usuário Inativado com Sucesso!');
+            } else {
+                $user->ativo = true;
+                $user->save();
+
+                $hist = new Historico();
+                $hist->acao = "Ativou";
+                $hist->referencia = "Usuário";
+                $hist->codigo = $user->id;
+                $hist->usuario = Auth::user()->name;
+                $hist->save();
+
+                return back()->with('mensagem', 'Usuário Ativado com Sucesso!');
+            }
+        }
+        
+        return back();
+    }
+
 }

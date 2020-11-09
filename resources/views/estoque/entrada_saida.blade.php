@@ -4,6 +4,18 @@
     <div class="card border">
         <div class="card-body">
             <h5 class="card-title">Relatório de Entradas/Saídas</h5>
+            @if(session('mensagem'))
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-md-8">
+                        <div class="alert alert-success" role="alert">
+                            <button type="button" class="close" data-dismiss="alert">x</button>
+                            <p>{{session('mensagem')}}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endif
             @if(count($rels)==0)
                     <div class="alert alert-dark" role="alert">
                         @if($view=="inicial")
@@ -19,35 +31,33 @@
             <h5>Filtros: </h5>
             <form class="form-inline my-2 my-lg-0" method="GET" action="/estoque/historicos/filtro">
                 @csrf
-                <label for="tipo">Tipo</label>
                 <select class="custom-select" id="tipo" name="tipo">
                     <option value="">Selecione o tipo</option>
                     <option value="entrada">Entrada</option>
                     <option value="saida">Saída</option>
                 </select>
-                <label for="produto">Produto
                 <select class="custom-select" id="produto" name="produto">
-                    <option value="">Selecione</option>
+                    <option value="">Selecione o produto</option>
                     @foreach ($prods as $prod)
-                        <option value="{{$prod->id}}">{{$prod->nome}}</option>
+                        <option value="{{$prod->id}}">{{$prod->categoria->nome}} {{$prod->nome}} {{$prod->tipo_animal->nome}} {{$prod->tipo_fase}} {{$prod->marca->nome}} {{$prod->embalagem}}</option>
                     @endforeach
-                </select></label>
-                <label for="dataInicio">Data Início
+                </select>
+                <label for="dataInicio">Início
                 <input class="form-control" type="date" name="dataInicio"></label>
-                <label for="dataFim">Data Fim
+                <label for="dataFim">Fim
                 <input class="form-control" type="date" name="dataFim"></label>
                 <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Filtrar</button>
             </form>
             </div>
+            <hr/>
             <div class="table-responsive-xl">
             <table id="yesprint" class="table table-striped table-ordered table-hover">
                 <thead class="thead-dark">
                     <tr>
                         <th>Código Movimento</th>
                         <th>Tipo Movimento</th>
-                        <th>Nome Produto</th>
+                        <th>Produto</th>
                         <th>Quantidade</th>
-                        <th>Requisitante</th>
                         <th>Usuário</th>
                         <th>Data & Hora</th>
                     </tr>
@@ -57,9 +67,8 @@
                     @if($rel->tipo=='entrada') <tr style="color:blue;"> @else <tr style="color:green;"> @endif
                         <td>{{$rel->id}}</td>
                         <td>@if($rel->tipo=='entrada') Entrada @else Saída @endif</td>
-                        <td>{{$rel->produto_nome}}</td>
+                        <td>{{$rel->produto->categoria->nome}} {{$rel->produto->nome}} {{$rel->produto->tipo_animal->nome}} {{$rel->produto->tipo_fase}} {{$rel->produto->marca->nome}} {{$rel->produto->embalagem}}</td>
                         <td>{{$rel->quantidade}}</td>
-                        <td>{{$rel->requisitante}}</td>
                         <td>{{$rel->usuario}}</td>
                         <td>{{date("d/m/Y H:i", strtotime($rel->created_at))}}</td>
                     </tr>

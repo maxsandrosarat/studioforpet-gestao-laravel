@@ -4,6 +4,18 @@
     <div class="card border">
         <div class="card-body">
             <h5 class="card-title">Controle de Estoque</h5>
+            @if(session('mensagem'))
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-md-8">
+                        <div class="alert alert-success" role="alert">
+                            <button type="button" class="close" data-dismiss="alert">x</button>
+                            <p>{{session('mensagem')}}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endif
             @if(count($prods)==0)
                 <br/><br/>
                 <div class="alert alert-danger" role="alert">

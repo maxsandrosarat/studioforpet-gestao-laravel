@@ -4,6 +4,19 @@
     <div class="card border">
         <div class="card-body">
             <h5 class="card-title">Histórico de Pagamento - Pet: {{$pet->nome}} ({{$pet->raca->nome}}) - Cliente: {{$pet->cliente->nome}}</h5>
+            @if(session('mensagem'))
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-md-8">
+                        <div class="alert alert-success" role="alert">
+                            <button type="button" class="close" data-dismiss="alert">x</button>
+                            <p>{{session('mensagem')}}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endif
+            @if($pet->temPlano==1)
             <a type="button" class="float-button" data-toggle="modal" data-target="#exampleModal" data-toggle="tooltip" data-placement="bottom" title="Lançar Pagamento">
                 <i class="material-icons blue md-60">add_circle</i>
             </a>
@@ -49,6 +62,7 @@
                 </div>
                 </div>
             </div>
+            @endif
             @if(count($pgtos)==0)
                 <div class="alert alert-danger" role="alert">
                     Sem históricos para exibir!
@@ -62,7 +76,9 @@
                         <th>Código</th>
                         <th>Plano</th>
                         <th>Data Pagamento</th>
+                        <th>Forma Pagamento</th>
                         <th>Valor Pago</th>
+                        <th>Observação</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -71,7 +87,25 @@
                         <td>{{$pgto->id}}</td>
                         <td>{{$pgto->plano->nome}}</td>
                         <td>{{date("d/m/Y H:i", strtotime($pgto->created_at))}}</td>
+                        <td>{{$pgto->forma_pagamento}}</td>
                         <td>{{ 'R$ '.number_format($pgto->valorPago, 2, ',', '.')}}</td>
+                        <td>@if($pgto->observacao=="") Sem Observação @else
+                            <button type="button" class="badge badge-primary" data-toggle="modal" data-target="#exampleModalDesc{{$pgto->id}}">Observação</button></td>@endif
+                            <!-- Modal -->
+                            <div class="modal fade bd-example-modal-lg" id="exampleModalDesc{{$pgto->id}}" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+                            <div class="modal-dialog modal-lg" role="document">
+                                <div class="modal-content">
+                                <div class="modal-header">
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                                <div class="modal-body">
+                                    {{$pgto->observacao}}
+                                </div>
+                                </div>
+                            </div>
+                            </div>
                     </tr>
                     @endforeach
                 </tbody>

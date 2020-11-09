@@ -100,11 +100,30 @@
             id('valor').value = displaytext;
         }
 
+        //view(agendamentos/novo_agendamento)
+        function enderecoCliente(){
+            var d = id('pet');
+            var displaytext = d.options[d.selectedIndex].title;
+            id('endereco').innerHTML = displaytext;
+        }
+
         //view(cadastro/pets)
         function valorPlanoPet(){
             var d = id('plano');
             var displaytext = d.options[d.selectedIndex].title;
             id('valorPlano').value = displaytext;
+        }
+
+        function valorPlanoPetT(){
+            var d = id('planoT');
+            var displaytext = d.options[d.selectedIndex].title;
+            id('valorPlanoT').value = displaytext;
+        }
+
+        function valorPlanoPetR(){
+            var d = id('planoR');
+            var displaytext = d.options[d.selectedIndex].title;
+            id('valorPlanoR').value = displaytext;
         }
 
         function valorPlanoPetE(){
@@ -137,8 +156,48 @@
 
             });
 
-        });
+            //OPÇÕES DE AGENDAMENTO (CADASTRO)
+            $('#principal1').children('div').hide();
+            $('#select1').on('change', function(){
+                
+                var selectValorGeral = '#'+$(this).val();
+                $('#principal1').children('div').hide();
+                $('#principal1').children(selectValorGeral).show();
+                if($(this).val() == 0){
+                    id('pet').removeAttribute("required");
+                    id('select11').removeAttribute("required");
+                } else {
+                    id('nomeCliente').removeAttribute("required");
+                    id('telefone').removeAttribute("required");
+                    id('nomePet').removeAttribute("required");
+                    id('select10').removeAttribute("required");
+                    id('rua').removeAttribute("required");
+                    id('bairro').removeAttribute("required");
+                    id('numero').removeAttribute("required");
+                }
+            });
 
+            $('#principal11').children('div').hide();
+            $('#select11').on('change', function(){
+                
+                var selectValorGeral = '#'+$(this).val();
+                $('#principal11').children('div').hide();
+                $('#principal11').children(selectValorGeral).show();
+            });
+
+            $('#principal10').children('div').hide();
+            $('#select10').on('change', function(){
+                
+                var selectValorGeral = '#'+$(this).val();
+                $('#principal10').children('div').hide();
+                $('#principal10').children(selectValorGeral).show();
+                if($(this).val() == 0){
+                    id('rua').removeAttribute("required");
+                    id('bairro').removeAttribute("required");
+                    id('numero').removeAttribute("required");
+                }
+            });
+        });
 
         function getValor(campo){
             var valor = id(campo).value.replace(',','.');
@@ -199,7 +258,7 @@
             if (length == 11) {
                 cpfFormatado = numero.substring(0, 3) + '.' + numero.substring(3, 6) + '.' + numero.substring(6, 9) + '-' + numero.substring(9, 11);
             } else {
-                id('cpfE').value=("");
+                id('cpf').value=("");
                 alert("CPF inválido, digite os 11 números.");
             }
             id('cpfE').value = cpfFormatado;

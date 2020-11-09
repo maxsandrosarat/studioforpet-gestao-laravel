@@ -4,6 +4,18 @@
     <div class="card border">
         <div class="card-body">
             <h5 class="card-title">Lista de Pets</h5>
+            @if(session('mensagem'))
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-md-8">
+                        <div class="alert alert-success" role="alert">
+                            <button type="button" class="close" data-dismiss="alert">x</button>
+                            <p>{{session('mensagem')}}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endif
             <a type="button" class="float-button" data-toggle="modal" data-target="#exampleModal" data-toggle="tooltip" data-placement="bottom" title="Adicionar Novo Pet">
                 <i class="material-icons blue md-60">add_circle</i>
             </a>
@@ -162,303 +174,303 @@
                         <td width="100"><button type="button" data-toggle="modal" data-target="#exampleModalFoto{{$pet->id}}">@if($pet->foto!="")<img style="margin:0px; padding:0px;" src="/storage/{{$pet->foto}}" alt="foto_pet" width="50%"> @else <i class="material-icons md-48">no_photography</i> @endif</button></td>
                         <!-- Modal -->
                         <div class="modal fade bd-example-modal-lg" id="exampleModalFoto{{$pet->id}}" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
-                        <div class="modal-dialog modal-lg" role="document">
-                            <div class="modal-content">
-                            <div class="modal-header">
-                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                                </button>
+                            <div class="modal-dialog modal-lg" role="document">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                        </button>
+                                    </div>
+                                    <div class="modal-body" style="color: black; text-align: center;">
+                                        @if($pet->foto!="") <img src="/storage/{{$pet->foto}}" alt="foto_petuto" style="width: 100%"> @else <i class="material-icons md-60">no_photography</i> @endif
+                                        <hr/>
+                                        <h3 class="font-italic">Características do {{$pet->nome}} ({{$pet->cliente->nome}})</h3>
+                                        <hr/>
+                                        <p class="font-weight-bolder">
+                                        Porte: @if($pet->porte==="PEQUENO") Pequeno @else @if($pet->porte==="MEDIO") Médio @else Grande @endif @endif
+                                        </p>
+                                        <hr/>
+                                        <p class="font-weight-bolder">
+                                        Pelagem: @if($pet->pelo==="CURTO") Curto @else @if($pet->pelo==="MEDIANO") Mediano @else Longo @endif @endif
+                                        </p>
+                                        <hr/>
+                                        <p class="font-weight-bolder">
+                                        Coloração do Pelo: {{$pet->cor}}
+                                        </p>
+                                        <hr/>
+                                        <p class="font-weight-bolder">
+                                        Sexo: @if($pet->sexo==="MACHO") Macho @else Fêmea @endif
+                                        </p>
+                                        <hr/>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="modal-body" style="color: black; text-align: center;">
-                                @if($pet->foto!="") <img src="/storage/{{$pet->foto}}" alt="foto_petuto" style="width: 100%"> @else <i class="material-icons md-60">no_photography</i> @endif
-                                <hr/>
-                                <h3 class="font-italic">Características do {{$pet->nome}} ({{$pet->cliente->nome}})</h3>
-                                <hr/>
-                                <p class="font-weight-bolder">
-                                Porte: @if($pet->porte==="PEQUENO") Pequeno @else @if($pet->porte==="MEDIO") Médio @else Grande @endif @endif
-                                </p>
-                                <hr/>
-                                <p class="font-weight-bolder">
-                                Pelagem: @if($pet->pelo==="CURTO") Curto @else @if($pet->pelo==="MEDIANO") Mediano @else Longo @endif @endif
-                                </p>
-                                <hr/>
-                                <p class="font-weight-bolder">
-                                Coloração do Pelo: {{$pet->cor}}
-                                </p>
-                                <hr/>
-                                <p class="font-weight-bolder">
-                                Sexo: @if($pet->sexo==="MACHO") Macho @else Fêmea @endif
-                                </p>
-                                <hr/>
-                            </div>
-                            </div>
-                        </div>
                         </div>
                         <td>{{$pet->nome}}</td>
                         <td>{{$pet->raca->nome}}</td>
                         <td>{{$pet->cliente->nome}}</td>
                         <td>{{ $pet->created_at->format('d/m/Y H:i') }}</td>
                         <td>{{ $pet->updated_at->format('d/m/Y H:i') }}</td>
-                        <td>@if($pet->temPlano=='1') <button type="button" class="badge badge-primary" data-toggle="modal" data-target="#exampleModalDesc{{$pet->id}}">Detalhes</button> @else Não @endif</td>
+                        <td>@if($pet->temPlano=='1') <button type="button" class="badge badge-primary" data-toggle="modal" data-target="#exampleModalDesc{{$pet->id}}">Detalhes</button> @else @if($pet->planoCancelado=='1') <button type="button" class="badge badge-danger" data-toggle="modal" data-target="#exampleModalDesc{{$pet->id}}">Cancelado</button> @else Não @endif  @endif</td>
                         <!-- Modal -->
                         <div class="modal fade bd-example-modal-lg" id="exampleModalDesc{{$pet->id}}" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
-                        <div class="modal-dialog modal-lg" role="document">
-                            <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title">Detalhes do Plano do Pet: {{$pet->nome}} ({{$pet->cliente->nome}})</h5>
-                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                                </button>
-                            </div>
-                            <div class="modal-body">
-                                @if($pet->temPlano=='1')
-                                Plano: {{$pet->plano->nome}} <br/>
-                                Valor: {{'R$ '.number_format($pet->valorPlano, 2, ',', '.')}}<br/>
-                                Descrição: <br/>{!!nl2br($pet->plano->descricao)!!} <br/><br/>
-                                <a href="/pets/pagamentos/{{$pet->id}}" class="btn btn-sm btn-info" data-toggle="tooltip" data-placement="right" title="Histórico">Histórico Pagamentos</a> 
-                                <div class="modal-body">
-                                    <div class="card border">
-                                        <div class="card-body">
-                                            <form action="/pets/pagar/{{$pet->id}}" method="POST">
-                                                @csrf
-                                                <div class="form-group">
-                                                    <h3>Lançar Pagamento</h3>
-                                                    <input type="hidden" name="plano" value="{{$pet->plano->id}}">
-                                                    <label for="valor">Valor Pago:</label>
-                                                    <input type="text" class="form-control" name="valor" id="valor" value="{{$pet->valorPlano}}" required>
-                                                    <label for="formaPagamento">Forma Pagamento</label>
-                                                    <select class="custom-select" id="formaPagamento" name="formaPagamento" required>
-                                                        <option value="">Selecione a forma (obrigatório)</option>
-                                                        <option value="Dinheiro">Dinheiro</option>
-                                                        <option value="Débito">Débito</option>
-                                                        <option value="Crédito à Vista">Crédito à Vista</option>
-                                                        <option value="Crédito Parcelado">Crédito Parcelado</option>
-                                                    </select>
-                                                    <br/>
-                                                    <label for="observacao">Observação</label>
-                                                    <textarea class="form-control" name="observacao" id="observacao" rows="5" cols="20" maxlength="500" placeholder="Digite uma observação, caso necessário (opcional)"></textarea>
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <button type="submit" class="btn btn-success btn-sm">Pagar</button>
-                                                </div>
-                                            </form>
-                                        </div>
+                            <div class="modal-dialog modal-lg" role="document">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Detalhes do Plano do Pet: {{$pet->nome}} ({{$pet->cliente->nome}})</h5>
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                        </button>
                                     </div>
-                                </div>
-                                <div class="modal-body">
-                                    <div class="card border">
-                                        <div class="card-body">
-                                            <form action="/pets/trocar/{{$pet->id}}" method="POST">
-                                                @csrf
-                                        <h3>Trocar de Plano</h3>
-                                        @if(count($planos)==1)
-                                            <p>O plano atual é o único cadastrado.</p>
+                                    <div class="modal-body">
+                                        @if($pet->temPlano=='1')
+                                        Plano: {{$pet->plano->nome}} <br/>
+                                        Valor: {{'R$ '.number_format($pet->valorPlano, 2, ',', '.')}}<br/>
+                                        Descrição: <br/>{!!nl2br($pet->plano->descricao)!!} <br/><br/>
+                                        <a href="/pets/pagamentos/{{$pet->id}}" class="btn btn-sm btn-info" data-toggle="tooltip" data-placement="right" title="Histórico">Histórico Pagamentos</a> 
+                                        <div class="modal-body">
+                                            <div class="card border">
+                                                <div class="card-body">
+                                                    <form action="/pets/pagar/{{$pet->id}}" method="POST">
+                                                        @csrf
+                                                        <div class="form-group">
+                                                            <h3>Lançar Pagamento</h3>
+                                                            <input type="hidden" name="plano" value="{{$pet->plano->id}}">
+                                                            <label for="valor">Valor Pago:</label>
+                                                            <input type="text" class="form-control" name="valor" id="valor" value="{{$pet->valorPlano}}" required>
+                                                            <label for="formaPagamento">Forma Pagamento</label>
+                                                            <select class="custom-select" id="formaPagamento" name="formaPagamento" required>
+                                                                <option value="">Selecione a forma (obrigatório)</option>
+                                                                <option value="Dinheiro">Dinheiro</option>
+                                                                <option value="Débito">Débito</option>
+                                                                <option value="Crédito à Vista">Crédito à Vista</option>
+                                                                <option value="Crédito Parcelado">Crédito Parcelado</option>
+                                                            </select>
+                                                            <br/>
+                                                            <label for="observacao">Observação</label>
+                                                            <textarea class="form-control" name="observacao" id="observacao" rows="5" cols="20" maxlength="500" placeholder="Digite uma observação, caso necessário (opcional)"></textarea>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="submit" class="btn btn-success btn-sm">Pagar</button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
                                         @else
-                                        <div class="form-group">
-                                            <select class="custom-select" id="planoE" name="planoId" onchange="valorPlanoPetE();" required>
-                                                <option value="">Selecione um plano</option>
-                                                @foreach ($planos as $plano)
-                                                    @if($plano->id===$pet->plano->id)
-                                                    @else
-                                                    <option value="{{$plano->id}}" title="{{$plano->valor}}">{{$plano->nome}}</option>
-                                                    @endif
-                                                @endforeach
-                                            </select>
-                                            <br/><br/>
-                                            <label for="valorPlano">Valor do Plano: R$
-                                            <input type="text" class="form-control" name="valorPlano" id="valorPlanoE" placeholder="Exemplo: 35.5" required></label>
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="submit" class="btn btn-primary btn-sm">Trocar</button>
-                                            </div>
+                                            <h3>Plano Cancelado</h3>
+                                            <a href="/pets/pagamentos/{{$pet->id}}" class="btn btn-sm btn-info" data-toggle="tooltip" data-placement="right" title="Histórico">Histórico Pagamentos</a>
                                         @endif
-                                    </form>
+                                        @if($pet->temPlano=='1')
+                                        <div class="modal-body">
+                                            <div class="card border">
+                                                <div class="card-body">
+                                                    <form action="/pets/trocar/{{$pet->id}}" method="POST">
+                                                        @csrf
+                                                        <h3>Trocar de Plano</h3>
+                                                        @if(count($planos)==1)
+                                                            <p>O plano atual é o único cadastrado.</p>
+                                                        @else
+                                                        <div class="form-group">
+                                                            <select class="custom-select" id="planoT" name="planoId" onchange="valorPlanoPetT();" required>
+                                                                <option value="">Selecione um plano</option>
+                                                                @foreach ($planos as $plano)
+                                                                    @if($plano->id===$pet->plano->id)
+                                                                    @else
+                                                                    <option value="{{$plano->id}}" title="{{$plano->valor}}">{{$plano->nome}}</option>
+                                                                    @endif
+                                                                @endforeach
+                                                            </select>
+                                                            <br/><br/>
+                                                            <label for="valorPlano">Valor do Plano: R$
+                                                            <input type="text" class="form-control" name="valorPlano" id="valorPlanoT" placeholder="Exemplo: 35.5" onblur="getValor('valorPlanoT')" required></label>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="submit" class="btn btn-primary btn-sm">Trocar</button>
+                                                        </div>
+                                                        @endif
+                                                    </form>
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
-                                </div>
-                                <div class="modal-body">
-                                    <div class="card border">
-                                        <div class="card-body">
-                                            @if($pet->planoCancelado==1)
-                                            <h3>Reativar Plano</h3>
-                                            <form action="/pets/reativar/{{$pet->id}}" method="POST">
-                                                @csrf
-                                            <div class="form-group">
-                                            <select class="custom-select" id="planoE" name="planoId" onchange="valorPlanoPetE();" required>
-                                                <option value="">Selecione um plano</option>
-                                                @foreach ($planos as $plano)
-                                                    @if($plano->id===$pet->plano->id)
+                                        @endif
+                                        <div class="modal-body">
+                                            <div class="card border">
+                                                <div class="card-body">
+                                                    @if($pet->planoCancelado==1)
+                                                    <h3>Reativar Plano</h3>
+                                                    <form action="/pets/reativar/{{$pet->id}}" method="POST">
+                                                        @csrf
+                                                        <div class="form-group">
+                                                            <select class="custom-select" id="planoR" name="planoId" onchange="valorPlanoPetR();" required>
+                                                                <option value="">Selecione um plano</option>
+                                                                @foreach ($planos as $plano)
+                                                                    <option value="{{$plano->id}}" title="{{$plano->valor}}">{{$plano->nome}}</option>
+                                                                @endforeach
+                                                            </select>
+                                                            <br/><br/>
+                                                            <label for="valorPlano">Valor do Plano: R$
+                                                            <input type="text" class="form-control" name="valorPlano" id="valorPlanoR" placeholder="Exemplo: 35.5" onblur="getValor('valorPlanoR')" required></label>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="submit" class="btn btn-light btn-sm">Reativar</button>
+                                                        </div>
+                                                    </form>
                                                     @else
-                                                    <option value="{{$plano->id}}" title="{{$plano->valor}}">{{$plano->nome}}</option>
+                                                    <h3>Cancelar Plano</h3>
+                                                    <a href="/pets/cancelar/{{$pet->id}}" class="btn btn-sm btn-danger" data-toggle="tooltip" data-placement="right" title="Cancelar">Cancelar</a>
                                                     @endif
-                                                @endforeach
-                                            </select>
-                                            <br/><br/>
-                                            <label for="valorPlano">Valor do Plano: R$
-                                            <input type="text" class="form-control" name="valorPlano" id="valorPlanoE" placeholder="Exemplo: 35.5" required></label>
+                                                </div>
                                             </div>
-                                            <div class="modal-footer">
-                                                <button type="submit" class="btn btn-light btn-sm">Reativar</button>
-                                            </div>
-                                            </form>
-                                            @else
-                                            <h3>Cancelar Plano</h3>
-                                                <a href="/pets/cancelar/{{$pet->id}}" class="btn btn-sm btn-danger" data-toggle="tooltip" data-placement="right" title="Cancelar">Cancelar</a>
-                                            @endif
                                         </div>
                                     </div>
                                 </div>
-                                @else
-                                @endif
                             </div>
-                            </div>
-                        </div>
                         </div>
                         <td>
-                            <button type="button" class="btn btn-sm btn-warning" data-toggle="modal" data-target="#exampleModal{{$pet->id}}" data-toggle="tooltip" data-placement="left" title="Editar">
-                                <i class="material-icons md-48">edit</i>
+                            <button type="button" class="badge badge-warning" data-toggle="modal" data-target="#exampleModal{{$pet->id}}" data-toggle="tooltip" data-placement="left" title="Editar">
+                                <i class="material-icons md-18">edit</i>
                             </button>
                             <!-- Modal -->
                             <div class="modal fade" id="exampleModal{{$pet->id}}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
                                 <div class="modal-dialog" role="document">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                    <h5 class="modal-title" id="exampleModalLabel">Editar Pet</h5>
-                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                        <span aria-hidden="true">&times;</span>
-                                    </button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <div class="card border">
-                                            <div class="card-body">
-                                                <form action="/pets/editar/{{$pet->id}}" method="POST" enctype="multipart/form-data">
-                                                    @csrf
-                                                    <div class="form-group">
-                                                        <label for="foto">Foto</label>
-                                                        <input type="file" id="foto" name="foto" accept=".jpg,.png,jpeg">
-                                                        <br/>
-                                                        <b style="font-size: 80%;">Aceito apenas Imagens JPG e PNG (".jpg" e ".png")</b>
-                                                        <label for="nome">Nome do petuto</label>
-                                                        <input type="text" class="form-control" name="nome" id="nome" value="{{$pet->nome}}" required>
-                                                        <br/>
-                                                        <label for="raca">Raça</label>
-                                                        <select class="custom-select" id="raca" name="raca" required>
-                                                            <option value="{{$pet->raca->id}}">{{$pet->raca->nome}}</option>
-                                                            @foreach ($racas as $raca)
-                                                                @if($raca->id==$pet->raca->id)
-                                                                @else
-                                                                <option value="{{$raca->id}}">{{$raca->nome}}</option>
-                                                                @endif
-                                                            @endforeach
-                                                        </select>
-                                                        <br/><br/>
-                                                        <label for="porte">Porte</label>
-                                                        <select class="custom-select" id="porte" name="porte">
-                                                            <option value="{{$pet->porte}}">@if($pet->porte==="PEQUENO") Pequeno @else @if($pet->porte==="MEDIO") Médio @else Grande @endif @endif</option>
-                                                            @if($pet->porte=="PEQUENO")
-                                                            <option value="MEDIO">Médio</option>
-                                                            <option value="GRANDE">Grande</option>
-                                                            @else
-                                                                @if($pet->porte=="MEDIO")
-                                                                <option value="PEQUENO">Pequeno</option>
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="exampleModalLabel">Editar Pet</h5>
+                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                <span aria-hidden="true">&times;</span>
+                                            </button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="card border">
+                                                <div class="card-body">
+                                                    <form action="/pets/editar/{{$pet->id}}" method="POST" enctype="multipart/form-data">
+                                                        @csrf
+                                                        <div class="form-group">
+                                                            <label for="foto">Foto</label>
+                                                            <input type="file" id="foto" name="foto" accept=".jpg,.png,jpeg">
+                                                            <br/>
+                                                            <b style="font-size: 80%;">Aceito apenas Imagens JPG e PNG (".jpg" e ".png")</b>
+                                                            <label for="nome">Nome do petuto</label>
+                                                            <input type="text" class="form-control" name="nome" id="nome" value="{{$pet->nome}}" required>
+                                                            <br/>
+                                                            <label for="raca">Raça</label>
+                                                            <select class="custom-select" id="raca" name="raca" required>
+                                                                <option value="{{$pet->raca->id}}">{{$pet->raca->nome}}</option>
+                                                                @foreach ($racas as $raca)
+                                                                    @if($raca->id==$pet->raca->id)
+                                                                    @else
+                                                                    <option value="{{$raca->id}}">{{$raca->nome}}</option>
+                                                                    @endif
+                                                                @endforeach
+                                                            </select>
+                                                            <br/><br/>
+                                                            <label for="porte">Porte</label>
+                                                            <select class="custom-select" id="porte" name="porte">
+                                                                <option value="{{$pet->porte}}">@if($pet->porte==="PEQUENO") Pequeno @else @if($pet->porte==="MEDIO") Médio @else Grande @endif @endif</option>
+                                                                @if($pet->porte=="PEQUENO")
+                                                                <option value="MEDIO">Médio</option>
                                                                 <option value="GRANDE">Grande</option>
                                                                 @else
-                                                                    @if($pet->porte=="GRANDE")
+                                                                    @if($pet->porte=="MEDIO")
                                                                     <option value="PEQUENO">Pequeno</option>
-                                                                    <option value="MEDIO">Médio</option>
-                                                                    @endif
-                                                                @endif
-                                                            @endif
-                                                        </select>
-                                                        <br/><br/>
-                                                        <label for="pelo">Pelagem</label>
-                                                        <select class="custom-select" id="pelo" name="pelo">
-                                                            <option value="{{$pet->pelo}}">@if($pet->pelo==="CURTO") Curto @else @if($pet->pelo==="MEDIANO") Mediano @else Longo @endif @endif</option>
-                                                            @if($pet->pelo=="CURTO")
-                                                            <option value="MEDIANO">Mediano</option>
-                                                            <option value="LONGO">Longo</option>
-                                                            <option value="TOSADO">Tosado</option>
-                                                            @else
-                                                                @if($pet->pelo=="MEDIANO")
-                                                                <option value="CURTO">Curto</option>
-                                                                <option value="LONGO">Longo</option>
-                                                                <option value="TOSADO">Tosado</option>
-                                                                @else
-                                                                    @if($pet->pelo=="LONGO")
-                                                                    <option value="CURTO">Curto</option>
-                                                                    <option value="MEDIANO">Mediano</option>
-                                                                    <option value="TOSADO">Tosado</option>
+                                                                    <option value="GRANDE">Grande</option>
                                                                     @else
-                                                                        @if($pet->pelo=="TOSADO")
-                                                                        <option value="CURTO">Curto</option>
-                                                                        <option value="MEDIANO">Mediano</option>
-                                                                        <option value="LONGO">Longo</option>
+                                                                        @if($pet->porte=="GRANDE")
+                                                                        <option value="PEQUENO">Pequeno</option>
+                                                                        <option value="MEDIO">Médio</option>
                                                                         @endif
                                                                     @endif
                                                                 @endif
-                                                            @endif
-                                                        </select>
-                                                        <br/><br/>
-                                                        <label for="cor">Coloração</label>
-                                                        <input type="text" class="form-control" name="cor" id="cor" value="{{$pet->cor}}" required>
-                                                        <br/>
-                                                        <label for="sexo">Sexo</label>
-                                                        <select class="custom-select" id="sexo" name="sexo">
-                                                            <option value="{{$pet->sexo}}">@if($pet->sexo==="MACHO") Macho @else Fêmea @endif</option>
-                                                            @if($pet->sexo=="MACHO")
-                                                            <option value="FEMEA">Fêmea</option>
-                                                            @else
-                                                                @if($pet->sexo=="FEMEA")
-                                                                <option value="MACHO">Macho</option>
-                                                                @endif
-                                                            @endif
-                                                        </select>
-                                                        <br/>
-                                                        <label for="cliente">Cliente</label>
-                                                        <select  class="custom-select" id="cliente" name="cliente" required>
-                                                            <option value="{{$pet->cliente->id}}">{{$pet->cliente->nome}}</option>
-                                                            @foreach ($clientes as $cliente)
-                                                                @if($cliente->id==$pet->cliente->id)
+                                                            </select>
+                                                            <br/><br/>
+                                                            <label for="pelo">Pelagem</label>
+                                                            <select class="custom-select" id="pelo" name="pelo">
+                                                                <option value="{{$pet->pelo}}">@if($pet->pelo==="CURTO") Curto @else @if($pet->pelo==="MEDIANO") Mediano @else Longo @endif @endif</option>
+                                                                @if($pet->pelo=="CURTO")
+                                                                <option value="MEDIANO">Mediano</option>
+                                                                <option value="LONGO">Longo</option>
+                                                                <option value="TOSADO">Tosado</option>
                                                                 @else
-                                                                <option value="{{$cliente->id}}">{{$cliente->nome}}</option>
+                                                                    @if($pet->pelo=="MEDIANO")
+                                                                    <option value="CURTO">Curto</option>
+                                                                    <option value="LONGO">Longo</option>
+                                                                    <option value="TOSADO">Tosado</option>
+                                                                    @else
+                                                                        @if($pet->pelo=="LONGO")
+                                                                        <option value="CURTO">Curto</option>
+                                                                        <option value="MEDIANO">Mediano</option>
+                                                                        <option value="TOSADO">Tosado</option>
+                                                                        @else
+                                                                            @if($pet->pelo=="TOSADO")
+                                                                            <option value="CURTO">Curto</option>
+                                                                            <option value="MEDIANO">Mediano</option>
+                                                                            <option value="LONGO">Longo</option>
+                                                                            @endif
+                                                                        @endif
+                                                                    @endif
                                                                 @endif
-                                                            @endforeach
-                                                        </select>
-                                                        @if($pet->temPlano=='0')
-                                                        <br/>
-                                                        <label for="selectPlano">Plano?</label>
-                                                        <select class="custom-select" name="plano" id="selectPlano">
-                                                            <option value="0" selected>NÃO</option>
-                                                            <option value="1">SIM</option>
-                                                        </select>
-                                                        <br/>
-                                                        <div id="principalSelectPlano">
-                                                            <div id="1">
-                                                                <br/>
-                                                                <select class="custom-select" id="planoE" name="planoId" onchange="valorPlanoPetE();">
-                                                                    <option value="">Selecione um plano</option>
-                                                                    @foreach ($planos as $plano)
-                                                                        <option value="{{$plano->id}}" title="{{$plano->valor}}">{{$plano->nome}}</option>
-                                                                    @endforeach
-                                                                </select>
-                                                                <br/><br/>
-                                                                <label for="valorPlano">Valor do Plano: R$
-                                                                <input type="text" class="form-control" name="valorPlano" id="valorPlanoE" placeholder="Exemplo: 35.5"></label>
+                                                            </select>
+                                                            <br/><br/>
+                                                            <label for="cor">Coloração</label>
+                                                            <input type="text" class="form-control" name="cor" id="cor" value="{{$pet->cor}}" required>
+                                                            <br/>
+                                                            <label for="sexo">Sexo</label>
+                                                            <select class="custom-select" id="sexo" name="sexo">
+                                                                <option value="{{$pet->sexo}}">@if($pet->sexo==="MACHO") Macho @else Fêmea @endif</option>
+                                                                @if($pet->sexo=="MACHO")
+                                                                <option value="FEMEA">Fêmea</option>
+                                                                @else
+                                                                    @if($pet->sexo=="FEMEA")
+                                                                    <option value="MACHO">Macho</option>
+                                                                    @endif
+                                                                @endif
+                                                            </select>
+                                                            <br/>
+                                                            <label for="cliente">Cliente</label>
+                                                            <select  class="custom-select" id="cliente" name="cliente" required>
+                                                                <option value="{{$pet->cliente->id}}">{{$pet->cliente->nome}}</option>
+                                                                @foreach ($clientes as $cliente)
+                                                                    @if($cliente->id==$pet->cliente->id)
+                                                                    @else
+                                                                    <option value="{{$cliente->id}}">{{$cliente->nome}}</option>
+                                                                    @endif
+                                                                @endforeach
+                                                            </select>
+                                                            @if($pet->temPlano=='0')
+                                                            <br/>
+                                                            <label for="selectPlano">Plano?</label>
+                                                            <select class="custom-select" name="plano" id="selectPlano">
+                                                                <option value="0" selected>NÃO</option>
+                                                                <option value="1">SIM</option>
+                                                            </select>
+                                                            <br/>
+                                                            <div id="principalSelectPlano">
+                                                                <div id="1">
+                                                                    <br/>
+                                                                    <select class="custom-select" id="planoE" name="planoId" onchange="valorPlanoPetE();">
+                                                                        <option value="">Selecione um plano</option>
+                                                                        @foreach ($planos as $plano)
+                                                                            <option value="{{$plano->id}}" title="{{$plano->valor}}">{{$plano->nome}}</option>
+                                                                        @endforeach
+                                                                    </select>
+                                                                    <br/><br/>
+                                                                    <label for="valorPlano">Valor do Plano: R$
+                                                                    <input type="text" class="form-control" name="valorPlano" id="valorPlanoE" placeholder="Exemplo: 35.5" onblur="getValor('valorPlanoE')"></label>
+                                                                </div>
+                                                                <div id="0">
+                                                                </div>
                                                             </div>
-                                                            <div id="0">
+                                                            @endif
+                                                            <div class="modal-footer">
+                                                                <button type="submit" class="btn btn-primary btn-sn">Salvar</button>
                                                             </div>
                                                         </div>
-                                                    </div>
-                                                    </div>
-                                                    @endif
-                                                    <div class="modal-footer">
-                                                        <button type="submit" class="btn btn-primary btn-sn">Salvar</button>
-                                                    </div>
-                                                </form>
+                                                    </form>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
                                 </div>
                             </div>
                         </td>

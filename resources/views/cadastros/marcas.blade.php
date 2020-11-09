@@ -4,6 +4,18 @@
     <div class="card border">
         <div class="card-body">
             <h5 class="card-title">Lista de Marcas</h5>
+            @if(session('mensagem'))
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-md-8">
+                        <div class="alert alert-success" role="alert">
+                            <button type="button" class="close" data-dismiss="alert">x</button>
+                            <p>{{session('mensagem')}}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endif
             <a type="button" class="float-button" data-toggle="modal" data-target="#exampleModal" data-toggle="tooltip" data-placement="bottom" title="Adicionar Nova Marca">
                 <i class="material-icons blue md-60">add_circle</i>
             </a>
@@ -63,8 +75,8 @@
                         <td>{{ $marca->created_at->format('d/m/Y H:i') }}</td>
                         <td>{{ $marca->updated_at->format('d/m/Y H:i') }}</td>
                         <td style="text-align: center;">
-                            <button type="button" class="btn btn-sm btn-warning" data-toggle="modal" data-target="#exampleModal{{$marca->id}}" data-toggle="tooltip" data-placement="left" title="Editar">
-                                <i class="material-icons md-48">edit</i>
+                            <button type="button" class="badge badge-warning" data-toggle="modal" data-target="#exampleModal{{$marca->id}}" data-toggle="tooltip" data-placement="left" title="Editar">
+                                <i class="material-icons md-18">edit</i>
                             </button>
                             
                             <div class="modal fade" id="exampleModal{{$marca->id}}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
@@ -92,9 +104,9 @@
                                 </div>
                             </div>
                             @if($marca->ativo==1)
-                                <a href="/marcas/apagar/{{$marca->id}}" class="btn btn-sm btn-secondary" data-toggle="tooltip" data-placement="right" title="Inativar"><i class="material-icons md-48 red">disabled_by_default</i></a>
+                                <a href="/marcas/apagar/{{$marca->id}}" class="badge badge-secondary" data-toggle="tooltip" data-placement="right" title="Inativar"><i class="material-icons md-18 red">disabled_by_default</i></a>
                             @else
-                                <a href="/marcas/apagar/{{$marca->id}}" class="btn btn-sm btn-secondary" data-toggle="tooltip" data-placement="right" title="Ativar"><i class="material-icons md-48 green">check_box</i></a>
+                                <a href="/marcas/apagar/{{$marca->id}}" class="badge badge-secondary" data-toggle="tooltip" data-placement="right" title="Ativar"><i class="material-icons md-18 green">check_box</i></a>
                             @endif
                         </td>
                     </tr>

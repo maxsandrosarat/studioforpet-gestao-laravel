@@ -4,6 +4,18 @@
     <div class="card border">
         <div class="card-body">
             <h5 class="card-title">Lista de Clientes</h5>
+            @if(session('mensagem'))
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-md-8">
+                        <div class="alert alert-success" role="alert">
+                            <button type="button" class="close" data-dismiss="alert">x</button>
+                            <p>{{session('mensagem')}}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endif
             <a type="button" class="float-button" data-toggle="modal" data-target="#exampleModalCad" data-toggle="tooltip" data-placement="bottom" title="Cadastrar Novo Cliente">
                 <i class="material-icons blue md-60">add_circle</i>
             </a>
@@ -252,8 +264,8 @@
                             </div>
                         </td>
                         <td>
-                            <button type="button" class="btn btn-warning btn-sm" data-toggle="modal" data-target="#exampleModal{{$cliente->id}}" data-toggle="tooltip" data-placement="left" title="Editar">
-                                <i class="material-icons md-48">edit</i>
+                            <button type="button" class="badge badge-warning" data-toggle="modal" data-target="#exampleModal{{$cliente->id}}" data-toggle="tooltip" data-placement="left" title="Editar">
+                                <i class="material-icons md-18">edit</i>
                             </button>
 
                             <!-- Modal -->
@@ -282,8 +294,8 @@
 
                                                 <label for="cpf">CPF</label>
                                                 <div>
-                                                    <input id="cpfE" type="text" class="form-control @error('cpf') is-invalid @enderror" name="cpf" autocomplete="cpf" autofocus value="{{$cliente->cpf}}" onblur="formatarCpfE()">
-                                                    @error('cpf')
+                                                    <input id="cpfE" type="text" class="form-control @error('cpfE') is-invalid @enderror" name="cpf" autocomplete="cpf" autofocus @if($cliente->nascimento!="") value="{{$cliente->cpf}}" @else placeholder="Digite o CPF" @endif onblur="formatarCpfE()">
+                                                    @error('cpfE')
                                                         <span class="invalid-feedback" role="alert">
                                                             <strong>{{ $message }}</strong>
                                                         </span>
@@ -292,7 +304,7 @@
 
                                                 <label for="nascimento">Nascimento</label>
                                                 <div>
-                                                    <input id="nascimento" type="date" class="form-control @error('nascimento') is-invalid @enderror" name="nascimento" autocomplete="nascimento" value="{{date("Y-m-d", strtotime($cliente->nascimento))}}" autofocus>
+                                                    <input id="nascimento" type="date" class="form-control @error('nascimento') is-invalid @enderror" name="nascimento" autocomplete="nascimento" @if($cliente->nascimento!="") value="{{date("Y-m-d", strtotime($cliente->nascimento))}}" @endif autofocus>
                                                     @error('nascimento')
                                                         <span class="invalid-feedback" role="alert">
                                                             <strong>{{ $message }}</strong>
