@@ -33,6 +33,7 @@ class CreateAgendamentosTable extends Migration
             $table->string('bairro')->nullable();
             $table->string('cidade')->nullable();
             $table->string('uf')->nullable();
+            $table->string('observacao')->nullable();
             $table->enum('status',['PENDENTE','ATENDIDO','CANCELADO']);
             $table->timestamps();
         });

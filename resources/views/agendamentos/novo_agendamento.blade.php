@@ -100,7 +100,10 @@
                                     </div>
                                 </div>
                             </div>
+                            <br/>
                         </div>
+                        <label for="observacao">Observação</label>
+                            <textarea class="form-control" name="observacao" id="observacao" rows="5" cols="20" maxlength="500" placeholder="Digite uma observação, caso necessário (opcional)"></textarea> 
                         <div class="form-group row mb-0">
                             <div class="col-md-6 offset-md-4">
                                 <button type="submit" class="btn btn-primary">

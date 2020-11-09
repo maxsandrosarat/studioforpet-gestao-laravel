@@ -2503,6 +2503,9 @@ class UserController extends Controller
         if($request->input('uf')!=""){
             $agend->uf = $request->input('uf');
         }
+        if($request->input('observacao')!=""){
+            $agend->observacao = $request->input('observacao');
+        }
         $agend->status = "PENDENTE"; 
         $agend->save();
 

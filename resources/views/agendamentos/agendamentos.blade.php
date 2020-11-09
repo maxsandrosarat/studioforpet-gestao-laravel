@@ -93,6 +93,9 @@
                                             Endereço: {{$agend->rua}}, {{$agend->numero}} ({{$agend->complemento}}) - {{$agend->bairro}}
                                             @endif
                                             @endif
+                                            @if($agend->observacao!="")
+                                            <br/> Observação: {{$agend->observacao}}
+                                            @endif
                                         </p>
                                     </div>
                                     <div class="card-footer">
